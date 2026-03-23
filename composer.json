@@ -1,6 +1,6 @@
 {
     "name": "jorj-sh/php-test-quality",
-    "description": "AST-based test quality analyzer for PHPUnit tests",
+    "description": "AST-based test quality analyser for PHPUnit tests",
     "type": "project",
     "license": "MIT",
     "require": {
