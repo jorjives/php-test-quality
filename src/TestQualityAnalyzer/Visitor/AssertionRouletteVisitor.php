@@ -10,11 +10,9 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class AssertionRouletteVisitor extends NodeVisitorAbstract implements VisitorInterface
+class AssertionRouletteVisitor extends AbstractTestVisitor
 {
     private const ASSERTION_SIGNATURES = [
         // methodName => [minRequiredArgs, messageArgIndex]
@@ -48,18 +46,12 @@ final class AssertionRouletteVisitor extends NodeVisitorAbstract implements Visi
         'assertMatchesRegularExpression' => [2, 2],
     ];
 
-    private ?string $currentFile = null;
     private ?string $currentTestMethod = null;
     /** @var array{method: string, hasMessage: bool}[] */
     private array $currentAssertions = [];
 
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -157,7 +149,7 @@ final class AssertionRouletteVisitor extends NodeVisitorAbstract implements Visi
 
     /**
      * @param string $methodName
-     * @param array<int, Node> $args
+     * @param array<int, \PhpParser\Node\Arg|\PhpParser\Node\VariadicPlaceholder> $args
      * @return bool
      */
     private function assertionHasMessage(string $methodName, array $args): bool
@@ -174,7 +166,7 @@ final class AssertionRouletteVisitor extends NodeVisitorAbstract implements Visi
     }
 
     /**
-     * @param array<int, Node> $args
+     * @param array<int, \PhpParser\Node\Arg|\PhpParser\Node\VariadicPlaceholder> $args
      * @return bool
      */
     private function hasLastArgAsStringLiteral(array $args): bool
@@ -183,26 +175,12 @@ final class AssertionRouletteVisitor extends NodeVisitorAbstract implements Visi
             return false;
         }
 
-        $lastArg = $args[count($args) - 1]->value;
-        return $lastArg instanceof String_;
-    }
-
-    private function isTestMethod(ClassMethod $node): bool
-    {
-        if (str_starts_with($node->name->name, 'test')) {
-            return true;
+        $lastArg = $args[count($args) - 1];
+        if (!$lastArg instanceof \PhpParser\Node\Arg) {
+            return false;
         }
 
-        foreach ($node->attrGroups as $attrGroup) {
-            foreach ($attrGroup->attrs as $attr) {
-                $attrName = $attr->name->toString();
-                if ($attrName === 'Test' || str_ends_with($attrName, '\Test')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return $lastArg->value instanceof String_;
     }
 
     /** @return Issue[] */
@@ -213,6 +191,7 @@ final class AssertionRouletteVisitor extends NodeVisitorAbstract implements Visi
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->currentTestMethod = null;
         $this->currentAssertions = [];
         $this->issues = [];

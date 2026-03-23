@@ -127,7 +127,7 @@ $allVisitors = [
     new RedundantPrintVisitor(),
     new ExceptionHandlingVisitor(),
     new InterfaceTestingVisitor(),
-    // new ConditionalTestLogicVisitor(),
+    new ConditionalTestLogicVisitor(),
     new MagicNumberTestVisitor(),
     new RedundantAssertionVisitor(),
     new RottenGreenTestVisitor(),

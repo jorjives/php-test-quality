@@ -9,22 +9,14 @@ use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Switch_;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class ConditionalTestLogicVisitor extends NodeVisitorAbstract implements VisitorInterface
+class ConditionalTestLogicVisitor extends AbstractTestVisitor
 {
-    private ?string $currentFile = null;
     private ?string $currentTestMethod = null;
 
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -85,24 +77,6 @@ final class ConditionalTestLogicVisitor extends NodeVisitorAbstract implements V
         return null;
     }
 
-    private function isTestMethod(ClassMethod $node): bool
-    {
-        if (str_starts_with($node->name->name, 'test')) {
-            return true;
-        }
-
-        foreach ($node->attrGroups as $attrGroup) {
-            foreach ($attrGroup->attrs as $attr) {
-                $attrName = $attr->name->toString();
-                if ($attrName === 'Test' || str_ends_with($attrName, '\Test')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     /** @return Issue[] */
     public function getIssues(): array
     {
@@ -111,6 +85,7 @@ final class ConditionalTestLogicVisitor extends NodeVisitorAbstract implements V
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->currentTestMethod = null;
         $this->issues = [];
     }

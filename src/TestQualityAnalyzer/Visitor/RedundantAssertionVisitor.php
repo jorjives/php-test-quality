@@ -14,11 +14,9 @@ use PhpParser\Node\Scalar\Float_;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class RedundantAssertionVisitor extends NodeVisitorAbstract implements VisitorInterface
+class RedundantAssertionVisitor extends AbstractTestVisitor
 {
     private const COMPARISON_ASSERTIONS = [
         'assertEquals',
@@ -33,16 +31,10 @@ final class RedundantAssertionVisitor extends NodeVisitorAbstract implements Vis
 
     private const EMPTY_ASSERTIONS = ['assertEmpty', 'assertNotEmpty'];
 
-    private ?string $currentFile = null;
     private ?string $currentTestMethod = null;
 
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -233,24 +225,6 @@ final class RedundantAssertionVisitor extends NodeVisitorAbstract implements Vis
         return null;
     }
 
-    private function isTestMethod(ClassMethod $node): bool
-    {
-        if (str_starts_with($node->name->name, 'test')) {
-            return true;
-        }
-
-        foreach ($node->attrGroups as $attrGroup) {
-            foreach ($attrGroup->attrs as $attr) {
-                $attrName = $attr->name->toString();
-                if ($attrName === 'Test' || str_ends_with($attrName, '\Test')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     /** @return Issue[] */
     public function getIssues(): array
     {
@@ -259,6 +233,7 @@ final class RedundantAssertionVisitor extends NodeVisitorAbstract implements Vis
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->currentTestMethod = null;
         $this->issues = [];
     }

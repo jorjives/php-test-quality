@@ -12,11 +12,9 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Nop;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class ConstructorInitializationVisitor extends NodeVisitorAbstract implements VisitorInterface
+class ConstructorInitializationVisitor extends AbstractTestVisitor
 {
     private const TEST_BASE_CLASSES = [
         'TestCase',
@@ -24,17 +22,11 @@ final class ConstructorInitializationVisitor extends NodeVisitorAbstract impleme
         'PHPUnit_Framework_TestCase',
     ];
 
-    private ?string $currentFile = null;
     private ?string $currentTestClass = null;
     private bool $isCurrentClassTestClass = false;
 
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -177,6 +169,7 @@ final class ConstructorInitializationVisitor extends NodeVisitorAbstract impleme
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->currentTestClass = null;
         $this->isCurrentClassTestClass = false;
         $this->issues = [];

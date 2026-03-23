@@ -13,13 +13,10 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class InterfaceTestingVisitor extends NodeVisitorAbstract implements VisitorInterface
+class InterfaceTestingVisitor extends AbstractTestVisitor
 {
-    private ?string $currentFile = null;
     private ?string $currentTestMethod = null;
 
     // Maps variable names to their mocked types
@@ -45,11 +42,6 @@ final class InterfaceTestingVisitor extends NodeVisitorAbstract implements Visit
 
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -217,26 +209,6 @@ final class InterfaceTestingVisitor extends NodeVisitorAbstract implements Visit
         $instanceOfCount = count($this->instanceOfAssertions);
 
         return $instanceOfCount === $this->totalAssertions;
-    }
-
-    private function isTestMethod(ClassMethod $node): bool
-    {
-        // Check method name starts with 'test'
-        if (str_starts_with($node->name->name, 'test')) {
-            return true;
-        }
-
-        // Check for #[Test] attribute
-        foreach ($node->attrGroups as $attrGroup) {
-            foreach ($attrGroup->attrs as $attr) {
-                $attrName = $attr->name->toString();
-                if ($attrName === 'Test' || str_ends_with($attrName, '\Test')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private function isCreateMockCall(Node $node): bool
@@ -456,6 +428,7 @@ final class InterfaceTestingVisitor extends NodeVisitorAbstract implements Visit
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->currentTestMethod = null;
         $this->resetMethodState();
         $this->issues = [];

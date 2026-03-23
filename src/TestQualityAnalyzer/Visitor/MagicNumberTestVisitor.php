@@ -11,11 +11,9 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\Float_;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class MagicNumberTestVisitor extends NodeVisitorAbstract implements VisitorInterface
+class MagicNumberTestVisitor extends AbstractTestVisitor
 {
     private const ASSERTION_METHODS = [
         'assertEquals',
@@ -49,16 +47,10 @@ final class MagicNumberTestVisitor extends NodeVisitorAbstract implements Visito
         20, 25, 50, 100,         // Typical per-page defaults
     ];
 
-    private ?string $currentFile = null;
     private ?string $currentTestMethod = null;
 
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -148,26 +140,6 @@ final class MagicNumberTestVisitor extends NodeVisitorAbstract implements Visito
         return null;
     }
 
-    private function isTestMethod(ClassMethod $node): bool
-    {
-        // Check method name starts with 'test'
-        if (str_starts_with($node->name->name, 'test')) {
-            return true;
-        }
-
-        // Check for #[Test] attribute
-        foreach ($node->attrGroups as $attrGroup) {
-            foreach ($attrGroup->attrs as $attr) {
-                $attrName = $attr->name->toString();
-                if ($attrName === 'Test' || str_ends_with($attrName, '\Test')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     /** @return Issue[] */
     public function getIssues(): array
     {
@@ -176,6 +148,7 @@ final class MagicNumberTestVisitor extends NodeVisitorAbstract implements Visito
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->currentTestMethod = null;
         $this->issues = [];
     }
