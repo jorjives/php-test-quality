@@ -149,7 +149,7 @@ class AssertionRouletteVisitor extends AbstractTestVisitor
 
     /**
      * @param string $methodName
-     * @param array<int, Node> $args
+     * @param array<int, \PhpParser\Node\Arg|\PhpParser\Node\VariadicPlaceholder> $args
      * @return bool
      */
     private function assertionHasMessage(string $methodName, array $args): bool
@@ -166,7 +166,7 @@ class AssertionRouletteVisitor extends AbstractTestVisitor
     }
 
     /**
-     * @param array<int, Node> $args
+     * @param array<int, \PhpParser\Node\Arg|\PhpParser\Node\VariadicPlaceholder> $args
      * @return bool
      */
     private function hasLastArgAsStringLiteral(array $args): bool
@@ -175,8 +175,12 @@ class AssertionRouletteVisitor extends AbstractTestVisitor
             return false;
         }
 
-        $lastArg = $args[count($args) - 1]->value;
-        return $lastArg instanceof String_;
+        $lastArg = $args[count($args) - 1];
+        if (!$lastArg instanceof \PhpParser\Node\Arg) {
+            return false;
+        }
+
+        return $lastArg->value instanceof String_;
     }
 
     /** @return Issue[] */
