@@ -6,23 +6,14 @@ namespace TestQualityAnalyzer\Visitor;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class LongTestVisitor extends NodeVisitorAbstract implements VisitorInterface
+class LongTestVisitor extends AbstractTestVisitor
 {
     private const LINE_THRESHOLD = 40;
 
-    private ?string $currentFile = null;
-
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -52,26 +43,6 @@ final class LongTestVisitor extends NodeVisitorAbstract implements VisitorInterf
         return null;
     }
 
-    private function isTestMethod(ClassMethod $node): bool
-    {
-        // Check method name starts with 'test'
-        if (str_starts_with($node->name->name, 'test')) {
-            return true;
-        }
-
-        // Check for #[Test] attribute
-        foreach ($node->attrGroups as $attrGroup) {
-            foreach ($attrGroup->attrs as $attr) {
-                $attrName = $attr->name->toString();
-                if ($attrName === 'Test' || str_ends_with($attrName, '\Test')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     /** @return Issue[] */
     public function getIssues(): array
     {
@@ -80,6 +51,7 @@ final class LongTestVisitor extends NodeVisitorAbstract implements VisitorInterf
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->issues = [];
     }
 

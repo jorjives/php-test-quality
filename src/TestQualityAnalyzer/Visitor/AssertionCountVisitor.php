@@ -10,24 +10,16 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeVisitorAbstract;
 use TestQualityAnalyzer\Issue;
-use TestQualityAnalyzer\VisitorInterface;
 
-final class AssertionCountVisitor extends NodeVisitorAbstract implements VisitorInterface
+class AssertionCountVisitor extends AbstractTestVisitor
 {
-    private ?string $currentFile = null;
     private ?string $currentTestMethod = null;
     private int $assertionCount = 0;
     private bool $hasExpectException = false;
 
     /** @var Issue[] */
     private array $issues = [];
-
-    public function setCurrentFile(string $file): void
-    {
-        $this->currentFile = $file;
-    }
 
     public function enterNode(Node $node): ?int
     {
@@ -102,26 +94,6 @@ final class AssertionCountVisitor extends NodeVisitorAbstract implements Visitor
         return null;
     }
 
-    private function isTestMethod(ClassMethod $node): bool
-    {
-        // Check method name starts with 'test'
-        if (str_starts_with($node->name->name, 'test')) {
-            return true;
-        }
-
-        // Check for #[Test] attribute
-        foreach ($node->attrGroups as $attrGroup) {
-            foreach ($attrGroup->attrs as $attr) {
-                $attrName = $attr->name->toString();
-                if ($attrName === 'Test' || str_ends_with($attrName, '\Test')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     /** @return Issue[] */
     public function getIssues(): array
     {
@@ -130,6 +102,7 @@ final class AssertionCountVisitor extends NodeVisitorAbstract implements Visitor
 
     public function reset(): void
     {
+        $this->currentFile = null;
         $this->currentTestMethod = null;
         $this->assertionCount = 0;
         $this->hasExpectException = false;
