@@ -12,6 +12,12 @@ use TestQualityAnalyzer\Visitor\MagicNumberTestVisitor;
 
 final class Configuration
 {
+    /**
+     * @param array<int|float> $magicNumberAllowlist
+     * @param array<int|float> $magicNumberAllowlistExtra
+     * @param array<string>|null $enabledDetectors
+     * @param array<string> $disabledDetectors
+     */
     private function __construct(
         private readonly int $longTestThreshold,
         private readonly array $magicNumberAllowlist,
@@ -144,6 +150,7 @@ final class Configuration
         return $this->longTestThreshold;
     }
 
+    /** @return array<int|float> */
     public function getMagicNumberAllowlist(): array
     {
         if ($this->magicNumberAllowlistExtra === []) {
@@ -161,11 +168,13 @@ final class Configuration
         return array_values($result);
     }
 
+    /** @return array<string>|null */
     public function getEnabledDetectors(): ?array
     {
         return $this->enabledDetectors;
     }
 
+    /** @return array<string> */
     public function getDisabledDetectors(): array
     {
         return $this->disabledDetectors;

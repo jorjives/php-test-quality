@@ -189,6 +189,9 @@ final class AnalyzeCommand extends Command
         return rtrim($directory, '/') . '/' . $path;
     }
 
+    /**
+     * @param array<string> $baselinePaths
+     */
     private function handleGenerateBaseline(
         AnalysisResult $result,
         array $baselinePaths,
@@ -297,6 +300,7 @@ final class AnalyzeCommand extends Command
     }
 
     /**
+     * @param array<string> $baselinePaths
      * @return array{AnalysisResult, int}|null  null on error
      */
     private function filterByBaseline(

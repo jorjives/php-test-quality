@@ -47,6 +47,7 @@ class MagicNumberTestVisitor extends AbstractTestVisitor
         20, 25, 50, 100,         // Typical per-page defaults
     ];
 
+    /** @param array<int|float> $trivialValues */
     public function __construct(private readonly array $trivialValues = self::DEFAULT_TRIVIAL_VALUES) {}
 
     private ?string $currentTestMethod = null;
