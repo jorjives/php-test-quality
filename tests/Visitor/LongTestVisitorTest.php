@@ -341,6 +341,46 @@ PHP;
         self::assertSame('Long Test', $visitor->getName());
     }
 
+    public function testCustomThresholdDetectsShorterTests(): void
+    {
+        $code = <<<'PHP'
+<?php
+class SomeTest extends TestCase {
+    public function testMediumLength(): void
+    {
+        $a = 1;
+        $b = 2;
+        $c = 3;
+        $d = 4;
+        $e = 5;
+        $f = 6;
+        $g = 7;
+        $h = 8;
+        $i = 9;
+        $j = 10;
+        $k = 11;
+        $l = 12;
+        $m = 13;
+        $n = 14;
+        $o = 15;
+        self::assertTrue(true);
+    }
+}
+PHP;
+
+        $parser = (new \PhpParser\ParserFactory())->createForNewestSupportedVersion();
+        $ast = $parser->parse($code);
+
+        $visitor = new LongTestVisitor(lineThreshold: 15);
+        $traverser = new \PhpParser\NodeTraverser();
+        $traverser->addVisitor($visitor);
+        $traverser->traverse($ast);
+
+        $issues = $visitor->getIssues();
+        self::assertCount(1, $issues, 'Custom threshold of 15 should flag this test');
+        self::assertStringContainsString('15', $issues[0]->message, 'Message should show configured threshold');
+    }
+
     public function testDetectsMultipleLongTests(): void
     {
         // Both methods exceed 40 line threshold
