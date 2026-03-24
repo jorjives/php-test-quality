@@ -273,4 +273,28 @@ PHP;
         self::assertStringContainsString('-100', $issues[0]->message);
         self::assertStringContainsString('-50', $issues[1]->message);
     }
+
+    public function testCustomAllowlistPermitsSpecificNumbers(): void
+    {
+        $code = <<<'PHP'
+<?php
+class SomeTest extends TestCase {
+    public function testSomething(): void
+    {
+        $this->assertEquals(12345, $result);
+    }
+}
+PHP;
+
+        $parser = (new \PhpParser\ParserFactory())->createForNewestSupportedVersion();
+        $ast = $parser->parse($code);
+
+        // 12345 is normally flagged, but our custom allowlist includes it
+        $visitor = new MagicNumberTestVisitor(trivialValues: [0, 1, 12345]);
+        $traverser = new \PhpParser\NodeTraverser();
+        $traverser->addVisitor($visitor);
+        $traverser->traverse($ast);
+
+        self::assertCount(0, $visitor->getIssues(), 'Custom allowlist should permit 12345');
+    }
 }

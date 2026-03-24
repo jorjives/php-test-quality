@@ -29,7 +29,7 @@ class MagicNumberTestVisitor extends AbstractTestVisitor
      * Trivial values that are commonly used and self-documenting.
      * Includes: 0, 1, -1, common small integers, HTTP status codes, and pagination defaults.
      */
-    private const TRIVIAL_VALUES = [
+    public const DEFAULT_TRIVIAL_VALUES = [
         // Basic values (small integers often used as counts, indices)
         0, 1, -1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
         0.0, 1.0, -1.0,
@@ -46,6 +46,8 @@ class MagicNumberTestVisitor extends AbstractTestVisitor
         // Common pagination values
         20, 25, 50, 100,         // Typical per-page defaults
     ];
+
+    public function __construct(private readonly array $trivialValues = self::DEFAULT_TRIVIAL_VALUES) {}
 
     private ?string $currentTestMethod = null;
 
@@ -84,7 +86,7 @@ class MagicNumberTestVisitor extends AbstractTestVisitor
             $value = $arg->value;
 
             if ($value instanceof Int_) {
-                if (!in_array($value->value, self::TRIVIAL_VALUES, true)) {
+                if (!in_array($value->value, $this->trivialValues, true)) {
                     $this->issues[] = new Issue(
                         file: $this->currentFile ?? 'unknown',
                         testName: $this->currentTestMethod,
@@ -93,7 +95,7 @@ class MagicNumberTestVisitor extends AbstractTestVisitor
                     );
                 }
             } elseif ($value instanceof Float_) {
-                if (!in_array($value->value, self::TRIVIAL_VALUES, true)) {
+                if (!in_array($value->value, $this->trivialValues, true)) {
                     $this->issues[] = new Issue(
                         file: $this->currentFile ?? 'unknown',
                         testName: $this->currentTestMethod,
@@ -105,7 +107,7 @@ class MagicNumberTestVisitor extends AbstractTestVisitor
                 // Handle negative numbers: -100, -50, etc.
                 if ($value->expr instanceof Int_) {
                     $negativeValue = -$value->expr->value;
-                    if (!in_array($negativeValue, self::TRIVIAL_VALUES, true)) {
+                    if (!in_array($negativeValue, $this->trivialValues, true)) {
                         $this->issues[] = new Issue(
                             file: $this->currentFile ?? 'unknown',
                             testName: $this->currentTestMethod,
@@ -115,7 +117,7 @@ class MagicNumberTestVisitor extends AbstractTestVisitor
                     }
                 } elseif ($value->expr instanceof Float_) {
                     $negativeValue = -$value->expr->value;
-                    if (!in_array($negativeValue, self::TRIVIAL_VALUES, true)) {
+                    if (!in_array($negativeValue, $this->trivialValues, true)) {
                         $this->issues[] = new Issue(
                             file: $this->currentFile ?? 'unknown',
                             testName: $this->currentTestMethod,
