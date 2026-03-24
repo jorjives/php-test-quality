@@ -16,4 +16,4 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 COPY . .
 
 # Set entrypoint
-ENTRYPOINT ["php", "bin/analyze"]
+ENTRYPOINT ["php", "bin/tq"]

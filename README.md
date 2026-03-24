@@ -8,38 +8,65 @@ AST-based test quality analyser for PHPUnit tests. Detects common test smells by
 
 ## Installation
 
+**Global (recommended):**
+
 ```bash
-composer require --dev jorj-sh/php-test-quality
+composer global require jorj-sh/php-test-quality
+tq path/to/tests/
 ```
 
-Or clone and install directly:
+**Local:**
 
 ```bash
 git clone https://github.com/jorjives/php-test-quality.git
 cd php-test-quality
 composer install
+bin/tq path/to/tests/
 ```
 
 ## Usage
 
 ```bash
 # Analyse a test directory
-bin/analyze path/to/tests/
+tq path/to/tests/
 
 # JSON output
-bin/analyze path/to/tests/ --format=json
+tq path/to/tests/ --format=json
 
 # Run only specific detectors
-bin/analyze path/to/tests/ --only=no_assertions,assertion_roulette
+tq path/to/tests/ --only=no_assertions,assertion_roulette
 
 # List available detectors
-bin/analyze --list-types
+tq list-types
 
 # Generate a baseline (requires --reason)
-bin/analyze path/to/tests/ --generate-baseline --baseline --reason="Initial baseline"
+tq path/to/tests/ --generate-baseline --baseline=.tq-baseline.json --reason="Initial baseline"
 
 # Filter using a baseline
-bin/analyze path/to/tests/ --baseline
+tq path/to/tests/ --baseline=.tq-baseline.json
+```
+
+## Configuration
+
+`tq` auto-detects a `.tq.yaml` file in the scan directory. Override with `--config=path/to/.tq.yaml` or skip entirely with `--no-config`. CLI flags always take precedence over config values.
+
+```yaml
+thresholds:
+  long_test: 40
+  magic_number_allowlist:        # replaces default list entirely
+    - 0
+    - 1
+    - 200
+    - 404
+  magic_number_allowlist_extra:   # appends to active list
+    - 42
+
+detectors:
+  enabled: all
+  disabled:
+    - conditional_test_logic
+
+baseline: .tq-baseline.json
 ```
 
 ## Detectors
