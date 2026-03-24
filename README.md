@@ -8,20 +8,32 @@ AST-based test quality analyser for PHPUnit tests. Detects common test smells by
 
 ## Installation
 
-**Global (recommended):**
+**PHAR (no Composer needed):**
+
+```bash
+curl -L https://github.com/jorjives/php-test-quality/releases/latest/download/tq.phar -o tq.phar
+chmod +x tq.phar
+php tq.phar path/to/tests/
+```
+
+**Docker (no PHP needed):**
+
+```bash
+docker run --rm -v $(pwd):/code ghcr.io/jorjives/php-test-quality /code/tests/
+```
+
+**Composer global:**
 
 ```bash
 composer global require jorj-sh/php-test-quality
 tq path/to/tests/
 ```
 
-**Local:**
+**Composer dev dependency:**
 
 ```bash
-git clone https://github.com/jorjives/php-test-quality.git
-cd php-test-quality
-composer install
-bin/tq path/to/tests/
+composer require --dev jorj-sh/php-test-quality
+vendor/bin/tq path/to/tests/
 ```
 
 ## Usage
@@ -91,6 +103,10 @@ baseline: .tq-baseline.json
 ## Docker
 
 ```bash
+# Use the published image
+docker run --rm -v $(pwd):/code ghcr.io/jorjives/php-test-quality /code/tests/
+
+# Or build locally
 docker build -t php-test-quality .
 docker run --rm -v /path/to/tests:/tests php-test-quality /tests
 ```
