@@ -3,3 +3,4 @@
 /.phpstan/
 /var/cache/
 /*.phar
+/docs/superpowers/
