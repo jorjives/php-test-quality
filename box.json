@@ -14,14 +14,7 @@
     ],
     "compression": "GZ",
     "chmod": "0755",
-    "exclude": [
-        "tests",
-        "Tests",
-        "test",
-        "Test",
-        "docs",
-        "doc"
-    ],
+    "exclude-dev-files": true,
     "replacements": {
         "git_tag": "git-version"
     }
