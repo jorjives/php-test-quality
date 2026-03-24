@@ -9,7 +9,11 @@ use Symfony\Component\Console\Application;
 use TestQualityAnalyzer\Command\AnalyzeCommand;
 use TestQualityAnalyzer\Command\ListTypesCommand;
 
-$app = new Application('tq', '1.0.0');
+$version = '@git_tag@';
+if (str_contains($version, '@')) {
+    $version = 'dev';
+}
+$app = new Application('tq', $version);
 $app->add(new AnalyzeCommand());
 $app->add(new ListTypesCommand());
 $app->setDefaultCommand('analyze');
