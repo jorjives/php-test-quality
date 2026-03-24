@@ -1,0 +1,26 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use TestQualityAnalyzer\Command\AnalyzeCommand;
+use TestQualityAnalyzer\Command\ListTypesCommand;
+
+$app = new Application('tq', '1.0.0');
+$app->add(new AnalyzeCommand());
+$app->add(new ListTypesCommand());
+$app->setDefaultCommand('analyze');
+
+// If the first argument looks like a path (not a known command), prepend 'analyze'
+// so `tq /path/to/tests` works without typing `tq analyze /path/to/tests`.
+$knownCommands = ['analyze', 'list-types', 'help', 'list', 'completion', '_complete'];
+$firstArg = $argv[1] ?? null;
+if ($firstArg !== null && !in_array($firstArg, $knownCommands, true) && !str_starts_with($firstArg, '-')) {
+    array_splice($argv, 1, 0, ['analyze']);
+    $_SERVER['argv'] = $argv;
+}
+
+$app->run();

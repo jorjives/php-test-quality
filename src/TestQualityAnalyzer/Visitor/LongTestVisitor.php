@@ -10,10 +10,10 @@ use TestQualityAnalyzer\Issue;
 
 class LongTestVisitor extends AbstractTestVisitor
 {
-    private const LINE_THRESHOLD = 40;
-
     /** @var Issue[] */
     private array $issues = [];
+
+    public function __construct(private readonly int $lineThreshold = 40) {}
 
     public function enterNode(Node $node): ?int
     {
@@ -27,7 +27,7 @@ class LongTestVisitor extends AbstractTestVisitor
 
         $lineCount = $node->getEndLine() - $node->getStartLine() + 1;
 
-        if ($lineCount > self::LINE_THRESHOLD) {
+        if ($lineCount > $this->lineThreshold) {
             $this->issues[] = new Issue(
                 file: $this->currentFile ?? 'unknown',
                 testName: $node->name->name,
@@ -35,7 +35,7 @@ class LongTestVisitor extends AbstractTestVisitor
                 message: sprintf(
                     'Test is %d lines (threshold: %d). Consider splitting into focused tests.',
                     $lineCount,
-                    self::LINE_THRESHOLD
+                    $this->lineThreshold
                 ),
             );
         }
