@@ -55,4 +55,4 @@ jobs:
         run: |
           php tq.phar list-types
           php tq.phar --version
-          php tq.phar var/test-examples/; test $? -eq 1
+          ! php tq.phar var/test-examples/
