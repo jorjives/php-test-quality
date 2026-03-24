@@ -15,7 +15,7 @@ final class CliIntegrationTest extends TestCase
     {
         $this->tempDir = sys_get_temp_dir() . '/tq-cli-test-' . uniqid();
         mkdir($this->tempDir);
-        $this->analyzeScript = dirname(__DIR__) . '/bin/analyze';
+        $this->analyzeScript = dirname(__DIR__) . '/bin/tq';
     }
 
     protected function tearDown(): void
@@ -43,7 +43,7 @@ final class CliIntegrationTest extends TestCase
         $returnCode = 0;
 
         exec(
-            sprintf('php %s %s --generate-baseline --baseline 2>&1', escapeshellarg($this->analyzeScript), escapeshellarg($this->tempDir)),
+            sprintf('php %s %s --generate-baseline --baseline=.tq-baseline.json 2>&1', escapeshellarg($this->analyzeScript), escapeshellarg($this->tempDir)),
             $output,
             $returnCode
         );
@@ -78,7 +78,7 @@ final class CliIntegrationTest extends TestCase
 
         exec(
             sprintf(
-                'php %s %s --generate-baseline --baseline --reason="Test reason" 2>&1',
+                'php %s %s --generate-baseline --baseline=.tq-baseline.json --reason="Test reason" 2>&1',
                 escapeshellarg($this->analyzeScript),
                 escapeshellarg($this->tempDir)
             ),
@@ -107,7 +107,7 @@ final class CliIntegrationTest extends TestCase
 
         exec(
             sprintf(
-                'php %s %s --generate-baseline --baseline --force --reason="New reason" 2>&1',
+                'php %s %s --generate-baseline --baseline=.tq-baseline.json --force --reason="New reason" 2>&1',
                 escapeshellarg($this->analyzeScript),
                 escapeshellarg($this->tempDir)
             ),
