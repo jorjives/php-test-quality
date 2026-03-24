@@ -1,5 +1,5 @@
 /vendor/
-/composer.lock
 /.phpunit.cache/
 /.phpstan/
 /var/cache/
+/*.phar
