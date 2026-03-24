@@ -1,0 +1,14 @@
+.git
+.github
+tests
+docs
+var
+vendor
+*.phar
+.phpunit.cache
+.phpstan
+README.md
+LICENCE
+box.json
+phpunit.xml
+phpstan.neon
