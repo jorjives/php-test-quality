@@ -26,7 +26,7 @@ final class ListTypesCommandTest extends TestCase
         $expectedTypes = [
             'no_assertions', 'assertion_roulette', 'constructor_initialization',
             'empty_test', 'sleepy_test', 'redundant_print', 'exception_handling',
-            'interface_testing', 'conditional_test_logic', 'magic_number_test',
+            'interface_testing', 'existence_check_assertion', 'conditional_test_logic', 'magic_number_test',
             'redundant_assertion', 'rotten_green_test', 'mystery_guest', 'long_test',
         ];
 

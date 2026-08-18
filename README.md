@@ -93,6 +93,7 @@ baseline: .tq-baseline.json
 | `redundant_print` | Redundant Print | Debug output (`var_dump`, `echo`, etc.) in tests |
 | `exception_handling` | Exception Handling | Try-catch blocks instead of `expectException()` |
 | `interface_testing` | Interface Testing Anti-Patterns | Mock-only interface testing |
+| `existence_check_assertion` | Existence Check Assertion | `assertTrue`/`assertFalse` on `class_exists`/`method_exists` etc. |
 | `conditional_test_logic` | Conditional Test Logic | `if`/`switch`/ternary in tests |
 | `magic_number_test` | Magic Number Test | Non-trivial numeric literals in assertions |
 | `redundant_assertion` | Redundant Assertion | Tautological assertions like `assertEquals(1, 1)` |

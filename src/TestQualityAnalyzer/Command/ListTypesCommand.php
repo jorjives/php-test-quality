@@ -13,6 +13,7 @@ use TestQualityAnalyzer\Visitor\ConditionalTestLogicVisitor;
 use TestQualityAnalyzer\Visitor\ConstructorInitializationVisitor;
 use TestQualityAnalyzer\Visitor\EmptyTestVisitor;
 use TestQualityAnalyzer\Visitor\ExceptionHandlingVisitor;
+use TestQualityAnalyzer\Visitor\ExistenceCheckVisitor;
 use TestQualityAnalyzer\Visitor\InterfaceTestingVisitor;
 use TestQualityAnalyzer\Visitor\LongTestVisitor;
 use TestQualityAnalyzer\Visitor\MagicNumberTestVisitor;
@@ -41,6 +42,7 @@ final class ListTypesCommand extends Command
             new RedundantPrintVisitor(),
             new ExceptionHandlingVisitor(),
             new InterfaceTestingVisitor(),
+            new ExistenceCheckVisitor(),
             new ConditionalTestLogicVisitor(),
             new MagicNumberTestVisitor(),
             new RedundantAssertionVisitor(),
