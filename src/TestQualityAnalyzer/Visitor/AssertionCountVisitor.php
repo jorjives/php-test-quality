@@ -50,6 +50,12 @@ class AssertionCountVisitor extends AbstractTestVisitor
                 if (str_starts_with($methodName, 'expectException')) {
                     $this->hasExpectException = true;
                 }
+
+                // PHPUnit verifies mock expectations (->expects(...)) automatically
+                // during test teardown, so this counts as a real assertion.
+                if ($methodName === 'expects') {
+                    $this->assertionCount++;
+                }
             }
         }
 
