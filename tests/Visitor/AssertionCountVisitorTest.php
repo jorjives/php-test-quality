@@ -117,6 +117,29 @@ PHP;
         self::assertCount(0, $visitor->getIssues());
     }
 
+    public function testIgnoresTestWithMockExpectation(): void
+    {
+        $code = <<<'PHP'
+<?php
+class SomeTest extends TestCase {
+    public function testSomething(): void
+    {
+        $mock = $this->createMock(Collaborator::class);
+        $mock->expects($this->once())
+            ->method('doSomething')
+            ->with($this->callback(fn ($arg) => $arg === 'expected'));
+
+        $subject = new Subject($mock);
+        $subject->run();
+    }
+}
+PHP;
+
+        $visitor = $this->analyzeCode($code);
+
+        self::assertCount(0, $visitor->getIssues());
+    }
+
     public function testDetectsTestMethodByTestAttribute(): void
     {
         $code = <<<'PHP'
