@@ -16,7 +16,7 @@ class AssertionCountVisitor extends AbstractTestVisitor
 {
     private ?string $currentTestMethod = null;
     private int $assertionCount = 0;
-    private bool $hasExpectException = false;
+    private bool $hasAssertionExemption = false;
 
     /** @var Issue[] */
     private array $issues = [];
@@ -28,7 +28,7 @@ class AssertionCountVisitor extends AbstractTestVisitor
             if ($this->isTestMethod($node)) {
                 $this->currentTestMethod = $node->name->name;
                 $this->assertionCount = 0;
-                $this->hasExpectException = false;
+                $this->hasAssertionExemption = false;
             }
             return null;
         }
@@ -48,13 +48,19 @@ class AssertionCountVisitor extends AbstractTestVisitor
                 }
 
                 if (str_starts_with($methodName, 'expectException')) {
-                    $this->hasExpectException = true;
+                    $this->hasAssertionExemption = true;
                 }
 
                 // PHPUnit verifies mock expectations (->expects(...)) automatically
                 // during test teardown, so this counts as a real assertion.
                 if ($methodName === 'expects') {
                     $this->assertionCount++;
+                }
+
+                // expectNotToPerformAssertions() explicitly declares that no
+                // assertions are expected, so the test is intentionally assertion-free.
+                if ($methodName === 'expectNotToPerformAssertions') {
+                    $this->hasAssertionExemption = true;
                 }
             }
         }
@@ -71,7 +77,11 @@ class AssertionCountVisitor extends AbstractTestVisitor
                     }
 
                     if (str_starts_with($methodName, 'expectException')) {
-                        $this->hasExpectException = true;
+                        $this->hasAssertionExemption = true;
+                    }
+
+                    if ($methodName === 'expectNotToPerformAssertions') {
+                        $this->hasAssertionExemption = true;
                     }
                 }
             }
@@ -85,7 +95,7 @@ class AssertionCountVisitor extends AbstractTestVisitor
         // When leaving a test method, check if it had assertions
         if ($node instanceof ClassMethod && $this->currentTestMethod !== null) {
             if ($node->name->name === $this->currentTestMethod) {
-                if ($this->assertionCount === 0 && !$this->hasExpectException) {
+                if ($this->assertionCount === 0 && !$this->hasAssertionExemption) {
                     $this->issues[] = new Issue(
                         file: $this->currentFile ?? 'unknown',
                         testName: $this->currentTestMethod,
@@ -111,7 +121,7 @@ class AssertionCountVisitor extends AbstractTestVisitor
         $this->currentFile = null;
         $this->currentTestMethod = null;
         $this->assertionCount = 0;
-        $this->hasExpectException = false;
+        $this->hasAssertionExemption = false;
         $this->issues = [];
     }
 
