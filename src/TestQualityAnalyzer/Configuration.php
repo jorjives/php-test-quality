@@ -73,11 +73,11 @@ final class Configuration
             ? array_values($thresholds['magic_number_allowlist_extra'])
             : [];
 
-        $enabledDetectors = isset($detectors['enabled'])
+        $enabledDetectors = isset($detectors['enabled']) && is_array($detectors['enabled'])
             ? array_values($detectors['enabled'])
             : null;
 
-        $disabledDetectors = isset($detectors['disabled'])
+        $disabledDetectors = isset($detectors['disabled']) && is_array($detectors['disabled'])
             ? array_values($detectors['disabled'])
             : [];
 
