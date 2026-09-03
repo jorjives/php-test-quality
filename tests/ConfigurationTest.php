@@ -166,6 +166,30 @@ final class ConfigurationTest extends TestCase
         }
     }
 
+    public function testEnabledAllTreatedAsEnableAllDetectors(): void
+    {
+        $file = $this->writeTempYaml("detectors:\n  enabled: all\n");
+
+        try {
+            $config = Configuration::fromFile($file);
+            self::assertNull($config->getEnabledDetectors());
+        } finally {
+            unlink($file);
+        }
+    }
+
+    public function testDisabledAllTreatedAsDisableAllDetectors(): void
+    {
+        $file = $this->writeTempYaml("detectors:\n  disabled: all\n");
+
+        try {
+            $config = Configuration::fromFile($file);
+            self::assertSame([], $config->getDisabledDetectors());
+        } finally {
+            unlink($file);
+        }
+    }
+
     public function testInvalidThresholdThrows(): void
     {
         $file = $this->writeTempYaml("thresholds:\n  long_test: -1\n");
