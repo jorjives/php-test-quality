@@ -140,6 +140,42 @@ PHP;
         self::assertCount(0, $visitor->getIssues());
     }
 
+    public function testIgnoresTestWithExpectNotToPerformAssertions(): void
+    {
+        $code = <<<'PHP'
+<?php
+class SomeTest extends TestCase {
+    public function testSomething(): void
+    {
+        $this->expectNotToPerformAssertions();
+        doSomething();
+    }
+}
+PHP;
+
+        $visitor = $this->analyzeCode($code);
+
+        self::assertCount(0, $visitor->getIssues());
+    }
+
+    public function testIgnoresTestWithSelfExpectNotToPerformAssertions(): void
+    {
+        $code = <<<'PHP'
+<?php
+class SomeTest extends TestCase {
+    public function testSomething(): void
+    {
+        self::expectNotToPerformAssertions();
+        doSomething();
+    }
+}
+PHP;
+
+        $visitor = $this->analyzeCode($code);
+
+        self::assertCount(0, $visitor->getIssues());
+    }
+
     public function testDetectsTestMethodByTestAttribute(): void
     {
         $code = <<<'PHP'
