@@ -3,6 +3,11 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.2.3)'
+        required: true
 
 permissions:
   contents: write
@@ -13,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -48,7 +55,7 @@ jobs:
       - name: Extract version from tag
         id: version
         env:
-          REF_NAME: ${{ github.ref_name }}
+          REF_NAME: ${{ inputs.tag || github.ref_name }}
         run: echo "version=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
@@ -65,5 +72,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: tq.phar
           generate_release_notes: true
