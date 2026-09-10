@@ -52,10 +52,6 @@ final class Analyzer
 
     public function analyzeDirectory(string $directory): AnalysisResult
     {
-        $this->filesScanned = 0;
-        $this->testsFound = 0;
-        $this->issues = [];
-
         if (!is_dir($directory)) {
             return new AnalysisResult(0, 0, []);
         }
@@ -63,10 +59,30 @@ final class Analyzer
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($directory)
         );
-        $testFiles = new RegexIterator($iterator, '/.*Test\.php$/');
+        $paths = [];
+        foreach (new RegexIterator($iterator, '/.*Test\.php$/') as $file) {
+            $paths[] = $file->getPathname();
+        }
 
-        foreach ($testFiles as $file) {
-            $this->analyzeFile($file->getPathname(), $directory);
+        return $this->analyzeFiles($directory, $paths);
+    }
+
+    /**
+     * Analyse specific files, reporting paths relative to $baseDir.
+     * Files not named *Test.php are skipped, matching a directory scan.
+     *
+     * @param string[] $files
+     */
+    public function analyzeFiles(string $baseDir, array $files): AnalysisResult
+    {
+        $this->filesScanned = 0;
+        $this->testsFound = 0;
+        $this->issues = [];
+
+        foreach ($files as $file) {
+            if (str_ends_with($file, 'Test.php')) {
+                $this->analyzeFile($file, $baseDir);
+            }
         }
 
         $checksRun = array_map(
