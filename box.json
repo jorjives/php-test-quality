@@ -15,7 +15,5 @@
     "compression": "GZ",
     "chmod": "0755",
     "exclude-dev-files": true,
-    "replacements": {
-        "git_tag": "git-version"
-    }
+    "git-version": "git_tag"
 }
