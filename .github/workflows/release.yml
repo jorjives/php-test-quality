@@ -40,9 +40,11 @@ jobs:
         run: php box.phar compile
 
       - name: Smoke test PHAR
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           php tq.phar list-types
-          php tq.phar --version
+          test "$(php tq.phar --version)" = "tq $TAG"
           ! php tq.phar var/test-examples/
 
       - name: Login to GHCR
@@ -66,6 +68,7 @@ jobs:
             -t ghcr.io/jorjives/php-test-quality:"$VERSION" \
             -t ghcr.io/jorjives/php-test-quality:latest \
             .
+          test "$(docker run --rm ghcr.io/jorjives/php-test-quality:"$VERSION" --version)" = "tq v$VERSION"
           docker push ghcr.io/jorjives/php-test-quality:"$VERSION"
           docker push ghcr.io/jorjives/php-test-quality:latest
 
