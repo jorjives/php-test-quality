@@ -9,7 +9,6 @@ use PhpParser\ParserFactory;
 use PhpParser\Parser;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use RegexIterator;
 
 final class Analyzer
 {
@@ -60,7 +59,7 @@ final class Analyzer
             new RecursiveDirectoryIterator($directory)
         );
         $paths = [];
-        foreach (new RegexIterator($iterator, '/.*Test\.php$/') as $file) {
+        foreach ($iterator as $file) {
             $paths[] = $file->getPathname();
         }
 
@@ -69,7 +68,8 @@ final class Analyzer
 
     /**
      * Analyse specific files, reporting paths relative to $baseDir.
-     * Files not named *Test.php are skipped, matching a directory scan.
+     * Skips files that are missing (e.g. deleted, per a git diff), outside $baseDir,
+     * or not named *Test.php, so callers can pass any file list unfiltered.
      *
      * @param string[] $files
      */
@@ -79,9 +79,16 @@ final class Analyzer
         $this->testsFound = 0;
         $this->issues = [];
 
+        $realBase = realpath($baseDir);
         foreach ($files as $file) {
-            if (str_ends_with($file, 'Test.php')) {
-                $this->analyzeFile($file, $baseDir);
+            $realFile = realpath($file);
+            if (
+                $realFile !== false
+                && is_file($realFile)
+                && str_starts_with($realFile, $realBase . '/')
+                && str_ends_with($realFile, 'Test.php')
+            ) {
+                $this->analyzeFile($realFile, $baseDir);
             }
         }
 

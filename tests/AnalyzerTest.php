@@ -144,6 +144,15 @@ PHP);
         self::assertSame(0, $result->filesScanned);
     }
 
+    public function testSkipsListedFilesThatAreMissingOrOutsideBaseDirectory(): void
+    {
+        $analyzer = new Analyzer();
+        $analyzer->addVisitor(new AssertionCountVisitor());
+        $result = $analyzer->analyzeFiles($this->fixtureDir, [$this->fixtureDir . '/DeletedTest.php', __FILE__]);
+
+        self::assertSame(0, $result->filesScanned);
+    }
+
     public function testReturnsEmptyResultForEmptyDirectory(): void
     {
         $analyzer = new Analyzer();
