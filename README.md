@@ -107,7 +107,8 @@ baseline: .tq-baseline.json
 # Use the published image
 docker run --rm -v $(pwd):/code ghcr.io/jorjives/php-test-quality /code/tests/
 
-# Or build locally
+# Or build locally (the image packages tq.phar, so build it first)
+composer install --no-dev && php -d phar.readonly=0 box.phar compile
 docker build -t php-test-quality .
 docker run --rm -v /path/to/tests:/tests php-test-quality /tests
 ```
