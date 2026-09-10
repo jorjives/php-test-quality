@@ -38,6 +38,7 @@ final class AnalyzeCommand extends Command
             ->setName('analyze')
             ->setDescription('Analyse PHPUnit test files for quality issues')
             ->addArgument('directory', InputArgument::REQUIRED, 'Path to test directory')
+            ->addArgument('files', InputArgument::IS_ARRAY, 'Only analyse these files (must be inside the directory)')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: text or json', 'text')
             ->addOption('baseline', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Baseline file path(s)')
             ->addOption('generate-baseline', null, InputOption::VALUE_NONE, 'Generate a new baseline file')
@@ -58,6 +59,9 @@ final class AnalyzeCommand extends Command
             $stderr->writeln(sprintf("Error: Directory '%s' not found", $directory));
             return Command::FAILURE;
         }
+
+        /** @var string[] $files */
+        $files = $input->getArgument('files');
 
         // Load configuration
         $config = $this->loadConfig($input, $directory);
@@ -114,7 +118,9 @@ final class AnalyzeCommand extends Command
         }
 
         // Run analysis
-        $result = $analyzer->analyzeDirectory($directory);
+        $result = $files === []
+            ? $analyzer->analyzeDirectory($directory)
+            : $analyzer->analyzeFiles($directory, $files);
 
         // Handle baseline workflows
         $generateBaseline = $input->getOption('generate-baseline');

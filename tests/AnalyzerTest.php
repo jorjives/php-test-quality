@@ -105,6 +105,54 @@ PHP);
         self::assertSame(1, $result->filesScanned);
     }
 
+    public function testAnalyzesOnlyListedFilesWithPathsRelativeToBaseDirectory(): void
+    {
+        $noAssertion = <<<'PHP'
+<?php
+class %sTest extends TestCase {
+    public function testNothing(): void {
+        $x = 1;
+    }
+}
+PHP;
+        $this->createTestFile('Unit/ListedTest.php', sprintf($noAssertion, 'Listed'));
+        $this->createTestFile('Unit/UnlistedTest.php', sprintf($noAssertion, 'Unlisted'));
+
+        $analyzer = new Analyzer();
+        $analyzer->addVisitor(new AssertionCountVisitor());
+        $result = $analyzer->analyzeFiles($this->fixtureDir, [$this->fixtureDir . '/Unit/ListedTest.php']);
+
+        self::assertSame(1, $result->filesScanned);
+        self::assertSame(['Unit/ListedTest.php'], array_map(fn($i) => $i->file, $result->issues));
+    }
+
+    public function testSkipsListedFilesThatAreNotTests(): void
+    {
+        $this->createTestFile('SomeClass.php', <<<'PHP'
+<?php
+class SomeClass {
+    public function testLooksLikeATest(): void {
+        $x = 1;
+    }
+}
+PHP);
+
+        $analyzer = new Analyzer();
+        $analyzer->addVisitor(new AssertionCountVisitor());
+        $result = $analyzer->analyzeFiles($this->fixtureDir, [$this->fixtureDir . '/SomeClass.php']);
+
+        self::assertSame(0, $result->filesScanned);
+    }
+
+    public function testSkipsListedFilesThatAreMissingOrOutsideBaseDirectory(): void
+    {
+        $analyzer = new Analyzer();
+        $analyzer->addVisitor(new AssertionCountVisitor());
+        $result = $analyzer->analyzeFiles($this->fixtureDir, [$this->fixtureDir . '/DeletedTest.php', __FILE__]);
+
+        self::assertSame(0, $result->filesScanned);
+    }
+
     public function testReturnsEmptyResultForEmptyDirectory(): void
     {
         $analyzer = new Analyzer();
