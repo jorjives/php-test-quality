@@ -38,6 +38,7 @@ final class AnalyzeCommand extends Command
             ->setName('analyze')
             ->setDescription('Analyse PHPUnit test files for quality issues')
             ->addArgument('directory', InputArgument::REQUIRED, 'Path to test directory')
+            ->addArgument('files', InputArgument::IS_ARRAY, 'Only analyse these files (must be inside the directory)')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: text or json', 'text')
             ->addOption('baseline', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Baseline file path(s)')
             ->addOption('generate-baseline', null, InputOption::VALUE_NONE, 'Generate a new baseline file')
@@ -57,6 +58,22 @@ final class AnalyzeCommand extends Command
         if (!is_dir($directory)) {
             $stderr->writeln(sprintf("Error: Directory '%s' not found", $directory));
             return Command::FAILURE;
+        }
+
+        // Explicit files narrow the scan; files outside the directory are skipped so hooks can pass every edited file
+        /** @var string[] $requestedFiles */
+        $requestedFiles = $input->getArgument('files');
+        $realDirectory = realpath($directory);
+        $files = [];
+        foreach ($requestedFiles as $file) {
+            $realFile = realpath($file);
+            if ($realFile === false || !is_file($realFile)) {
+                $stderr->writeln(sprintf("Error: File '%s' not found", $file));
+                return Command::FAILURE;
+            }
+            if (str_starts_with($realFile, $realDirectory . '/')) {
+                $files[] = $realFile;
+            }
         }
 
         // Load configuration
@@ -114,7 +131,9 @@ final class AnalyzeCommand extends Command
         }
 
         // Run analysis
-        $result = $analyzer->analyzeDirectory($directory);
+        $result = $requestedFiles === []
+            ? $analyzer->analyzeDirectory($directory)
+            : $analyzer->analyzeFiles($directory, $files);
 
         // Handle baseline workflows
         $generateBaseline = $input->getOption('generate-baseline');

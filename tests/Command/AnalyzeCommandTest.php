@@ -319,6 +319,80 @@ PHP);
         }
     }
 
+    public function testFilesArgumentRestrictsScanAndBaselineStillMatches(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/tq-files-' . uniqid();
+        mkdir($tempDir . '/Unit', 0777, true);
+
+        $emptyTest = <<<'PHP'
+<?php
+namespace Test;
+use PHPUnit\Framework\TestCase;
+class %sTest extends TestCase {
+    public function testEmpty() {
+    }
+}
+PHP;
+        file_put_contents($tempDir . '/Unit/BaselinedTest.php', sprintf($emptyTest, 'Baselined'));
+        file_put_contents($tempDir . '/Unit/UnlistedTest.php', sprintf($emptyTest, 'Unlisted'));
+
+        $entry = fn(string $type) => [
+            'file' => 'Unit/BaselinedTest.php',
+            'test' => 'testEmpty',
+            'type' => $type,
+            'reason' => 'test',
+            'added_at' => date('c'),
+        ];
+        file_put_contents($tempDir . '/.tq-baseline.json', json_encode([
+            'generated' => date('c'),
+            'issues' => [$entry('no_assertions'), $entry('empty_test')],
+        ]));
+
+        try {
+            $tester = $this->createTester();
+            $tester->execute([
+                'directory' => $tempDir,
+                'files' => [$tempDir . '/Unit/BaselinedTest.php'],
+                '--baseline' => ['.tq-baseline.json'],
+            ]);
+
+            // UnlistedTest.php would fail if scanned; the listed file's issues are all baselined
+            self::assertSame(0, $tester->getStatusCode(), $tester->getDisplay());
+            self::assertStringContainsString('Files scanned: 1', $tester->getDisplay());
+        } finally {
+            @unlink($tempDir . '/Unit/BaselinedTest.php');
+            @unlink($tempDir . '/Unit/UnlistedTest.php');
+            @unlink($tempDir . '/.tq-baseline.json');
+            @rmdir($tempDir . '/Unit');
+            @rmdir($tempDir);
+        }
+    }
+
+    public function testMissingFileReturnsError(): void
+    {
+        $tester = $this->createTester();
+        $tester->execute([
+            'directory' => __DIR__ . '/../../var/test-examples',
+            'files' => [__DIR__ . '/../../var/test-examples/NoSuchTest.php'],
+        ]);
+
+        self::assertNotSame(0, $tester->getStatusCode());
+        self::assertStringContainsString('NoSuchTest.php', $tester->getDisplay());
+    }
+
+    public function testFilesOutsideDirectoryAreSkipped(): void
+    {
+        // Hooks pass every edited file; anything outside the test directory is not ours to judge
+        $tester = $this->createTester();
+        $tester->execute([
+            'directory' => __DIR__ . '/../../var/test-examples',
+            'files' => [__FILE__],
+        ]);
+
+        self::assertSame(0, $tester->getStatusCode(), $tester->getDisplay());
+        self::assertStringContainsString('Files scanned: 0', $tester->getDisplay());
+    }
+
     public function testInvalidDirectoryReturnsError(): void
     {
         $tester = $this->createTester();

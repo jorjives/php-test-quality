@@ -48,6 +48,11 @@ tq path/to/tests/ --format=json
 # Run only specific detectors
 tq path/to/tests/ --only=no_assertions,assertion_roulette
 
+# Analyse only specific files (e.g. from an editor or git hook).
+# The directory still anchors .tq.yaml, baselines and reported paths.
+# Files outside it, or not named *Test.php, are skipped.
+tq path/to/tests/ path/to/tests/Unit/FooTest.php src/Foo.php
+
 # List available detectors
 tq list-types
 
