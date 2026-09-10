@@ -60,10 +60,14 @@ final class Analyzer
         );
         $paths = [];
         foreach ($iterator as $file) {
-            $paths[] = $file->getPathname();
+            if ($file->isFile()) {
+                $paths[] = $file->getPathname();
+            }
         }
 
-        return $this->analyzeFiles($directory, $paths);
+        // No containment check here: every file the scan can see is analysed, including
+        // symlinks whose target lives elsewhere, so the gate never silently drops a test.
+        return $this->analyzePaths($directory, $paths);
     }
 
     /**
@@ -75,20 +79,31 @@ final class Analyzer
      */
     public function analyzeFiles(string $baseDir, array $files): AnalysisResult
     {
+        $realBase = realpath($baseDir);
+        $paths = array_filter($files, function (string $file) use ($realBase): bool {
+            $realFile = realpath($file);
+            return $realFile !== false
+                && is_file($realFile)
+                && str_starts_with($realFile, $realBase . '/');
+        });
+
+        return $this->analyzePaths($baseDir, $paths);
+    }
+
+    /**
+     * Analyse existing files; only those named *Test.php are parsed.
+     *
+     * @param string[] $paths
+     */
+    private function analyzePaths(string $baseDir, array $paths): AnalysisResult
+    {
         $this->filesScanned = 0;
         $this->testsFound = 0;
         $this->issues = [];
 
-        $realBase = realpath($baseDir);
-        foreach ($files as $file) {
-            $realFile = realpath($file);
-            if (
-                $realFile !== false
-                && is_file($realFile)
-                && str_starts_with($realFile, $realBase . '/')
-                && str_ends_with($realFile, 'Test.php')
-            ) {
-                $this->analyzeFile($realFile, $baseDir);
+        foreach ($paths as $path) {
+            if (str_ends_with($path, 'Test.php')) {
+                $this->analyzeFile($path, $baseDir);
             }
         }
 

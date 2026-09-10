@@ -144,6 +144,33 @@ PHP);
         self::assertSame(0, $result->filesScanned);
     }
 
+    public function testDirectoryScanIncludesSymlinkedTestsWhoseTargetIsOutsideTheDirectory(): void
+    {
+        // A directory scan is a quality gate: silently dropping tests it can see would fail open
+        $outsideDir = $this->fixtureDir . '-target';
+        mkdir($outsideDir);
+        file_put_contents($outsideDir . '/LinkedTest.php', <<<'PHP'
+<?php
+class LinkedTest extends TestCase {
+    public function testNothing(): void {
+        $x = 1;
+    }
+}
+PHP);
+        symlink($outsideDir . '/LinkedTest.php', $this->fixtureDir . '/LinkedTest.php');
+
+        try {
+            $analyzer = new Analyzer();
+            $analyzer->addVisitor(new AssertionCountVisitor());
+            $result = $analyzer->analyzeDirectory($this->fixtureDir);
+
+            self::assertSame(1, $result->filesScanned);
+            self::assertCount(1, $result->issues);
+        } finally {
+            $this->removeDirectory($outsideDir);
+        }
+    }
+
     public function testSkipsListedFilesThatAreMissingOrOutsideBaseDirectory(): void
     {
         $analyzer = new Analyzer();
