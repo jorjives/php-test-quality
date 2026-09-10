@@ -368,16 +368,17 @@ PHP;
         }
     }
 
-    public function testMissingFileReturnsError(): void
+    public function testMissingFilesAreSkipped(): void
     {
+        // File lists from git diffs can include deleted files
         $tester = $this->createTester();
         $tester->execute([
             'directory' => __DIR__ . '/../../var/test-examples',
-            'files' => [__DIR__ . '/../../var/test-examples/NoSuchTest.php'],
+            'files' => [__DIR__ . '/../../var/test-examples/DeletedTest.php'],
         ]);
 
-        self::assertNotSame(0, $tester->getStatusCode());
-        self::assertStringContainsString('NoSuchTest.php', $tester->getDisplay());
+        self::assertSame(0, $tester->getStatusCode(), $tester->getDisplay());
+        self::assertStringContainsString('Files scanned: 0', $tester->getDisplay());
     }
 
     public function testFilesOutsideDirectoryAreSkipped(): void

@@ -29,7 +29,7 @@ composer require --dev jorj-sh/php-test-quality
 tq path/to/tests/                        # Analyse tests (text output)
 tq path/to/tests/ --format=json          # JSON output
 tq path/to/tests/ --only=no_assertions   # Run specific detectors
-tq tests/ tests/Unit/FooTest.php src/X.php  # Only these files; non-tests and files outside tests/ skipped
+tq tests/ tests/Unit/FooTest.php src/X.php  # Only these files; missing, non-test and outside-tests/ files skipped
 tq list-types                            # List all detector types
 ```
 

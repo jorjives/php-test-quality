@@ -60,18 +60,15 @@ final class AnalyzeCommand extends Command
             return Command::FAILURE;
         }
 
-        // Explicit files narrow the scan; files outside the directory are skipped so hooks can pass every edited file
+        // Explicit files narrow the scan. Missing files (deleted, per a git diff) and files outside
+        // the directory are skipped, so hooks can pass every changed file unfiltered.
         /** @var string[] $requestedFiles */
         $requestedFiles = $input->getArgument('files');
         $realDirectory = realpath($directory);
         $files = [];
         foreach ($requestedFiles as $file) {
             $realFile = realpath($file);
-            if ($realFile === false || !is_file($realFile)) {
-                $stderr->writeln(sprintf("Error: File '%s' not found", $file));
-                return Command::FAILURE;
-            }
-            if (str_starts_with($realFile, $realDirectory . '/')) {
+            if ($realFile !== false && is_file($realFile) && str_starts_with($realFile, $realDirectory . '/')) {
                 $files[] = $realFile;
             }
         }
