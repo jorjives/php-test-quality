@@ -1,4 +1,4 @@
-FROM php:8.4-cli-alpine
+FROM php:8.4.27-cli-alpine
 
 # Ship the same PHAR as the GitHub release; build it first with `box compile`.
 COPY tq.phar /usr/local/bin/tq
