@@ -39,9 +39,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('no_assertions', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the test without assertions');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the test without assertions');
+        self::assertSame('no_assertions', $issues[0]->type, 'Issue type should be no_assertions');
     }
 
     public function testIgnoresTestWithThisAssert(): void
@@ -194,8 +194,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itDoesSomething', $issues[0]->testName);
+        self::assertCount(1, $issues, 'Should flag the #[Test] method without assertions');
+        self::assertSame('itDoesSomething', $issues[0]->testName, 'Issue should name the #[Test] method');
     }
 
     public function testIgnoresNonTestMethods(): void
@@ -233,10 +233,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the test without assertions before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'reset() should clear all issues');
     }
 
     public function testGetTypeReturnsNoAssertions(): void

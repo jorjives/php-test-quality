@@ -74,10 +74,14 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('assertion_roulette', $issues[0]->type);
-        self::assertStringContainsString('Assertion Roulette', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the test with unexplained assertions');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('assertion_roulette', $issues[0]->type, 'Issue type should be assertion_roulette');
+        self::assertStringContainsString(
+            'Assertion Roulette',
+            $issues[0]->message,
+            'Issue message should name the smell'
+        );
     }
 
     public function testIgnoresWhenAllAssertionsHaveMessages(): void
@@ -134,9 +138,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('assertion_roulette', $issues[0]->type);
-        self::assertStringContainsString('without messages', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the test when one assertion lacks a message');
+        self::assertSame('assertion_roulette', $issues[0]->type, 'Issue type should be assertion_roulette');
+        self::assertStringContainsString(
+            'without messages',
+            $issues[0]->message,
+            'Issue message should mention the assertions without messages'
+        );
     }
 
     public function testHandlesStaticAssertCalls(): void
@@ -155,8 +163,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('assertion_roulette', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag static assert calls without messages');
+        self::assertSame('assertion_roulette', $issues[0]->type, 'Issue type should be assertion_roulette');
     }
 
     public function testHandlesUnknownAssertionsWithHeuristic(): void
@@ -176,8 +184,8 @@ PHP;
         $issues = $visitor->getIssues();
 
         // Both unknown assertions without string message, should flag
-        self::assertCount(1, $issues);
-        self::assertSame('assertion_roulette', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag unknown assertions without string messages');
+        self::assertSame('assertion_roulette', $issues[0]->type, 'Issue type should be assertion_roulette');
     }
 
     public function testDetectsTestMethodByTestAttribute(): void
@@ -199,8 +207,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itDoesSomething', $issues[0]->testName);
+        self::assertCount(1, $issues, 'Should flag the #[Test] method with unexplained assertions');
+        self::assertSame('itDoesSomething', $issues[0]->testName, 'Issue should name the #[Test] method');
     }
 
     public function testIgnoresNonTestMethods(): void
@@ -275,9 +283,9 @@ PHP;
         $issues = $visitor->getIssues();
 
         // Both test methods have multiple assertions without messages
-        self::assertCount(2, $issues);
-        self::assertSame('testFirst', $issues[0]->testName);
-        self::assertSame('testSecond', $issues[1]->testName);
+        self::assertCount(2, $issues, 'Should flag each test method separately');
+        self::assertSame('testFirst', $issues[0]->testName, 'First issue should name the first test');
+        self::assertSame('testSecond', $issues[1]->testName, 'Second issue should name the second test');
     }
 
     public function testCountAssertionsCountsCorrectly(): void

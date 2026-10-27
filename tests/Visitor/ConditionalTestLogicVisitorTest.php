@@ -42,9 +42,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('conditional_test_logic', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the if statement');
+        self::assertSame(
+            'testSomething',
+            $issues[0]->testName,
+            'Issue should name the test containing the if statement'
+        );
+        self::assertSame('conditional_test_logic', $issues[0]->type, 'Issue type should be conditional_test_logic');
     }
 
     public function testDetectsSwitchStatement(): void
@@ -69,10 +73,10 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('conditional_test_logic', $issues[0]->type);
-        self::assertStringContainsString('switch', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the switch statement');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the test containing the switch');
+        self::assertSame('conditional_test_logic', $issues[0]->type, 'Issue type should be conditional_test_logic');
+        self::assertStringContainsString('switch', $issues[0]->message, 'Issue message should mention the switch');
     }
 
     public function testDetectsTernaryOperator(): void
@@ -92,10 +96,10 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('conditional_test_logic', $issues[0]->type);
-        self::assertStringContainsString('ternary', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the ternary operator');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the test containing the ternary');
+        self::assertSame('conditional_test_logic', $issues[0]->type, 'Issue type should be conditional_test_logic');
+        self::assertStringContainsString('ternary', $issues[0]->message, 'Issue message should mention the ternary');
     }
 
     public function testDetectsNestedConditionals(): void
@@ -118,11 +122,19 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('conditional_test_logic', $issues[0]->type);
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('conditional_test_logic', $issues[1]->type);
+        self::assertCount(2, $issues, 'Should flag both the outer and inner if statements');
+        self::assertSame('testSomething', $issues[0]->testName, 'Outer issue should name the test');
+        self::assertSame(
+            'conditional_test_logic',
+            $issues[0]->type,
+            'Outer issue type should be conditional_test_logic'
+        );
+        self::assertSame('testSomething', $issues[1]->testName, 'Inner issue should name the test');
+        self::assertSame(
+            'conditional_test_logic',
+            $issues[1]->type,
+            'Inner issue type should be conditional_test_logic'
+        );
     }
 
     public function testDetectsMultipleConditionals(): void
@@ -231,10 +243,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the if statement before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'reset() should clear all issues');
     }
 
     public function testGetTypeReturnsConditionalTestLogic(): void
@@ -271,8 +283,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itDoesSomething', $issues[0]->testName);
-        self::assertSame('conditional_test_logic', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the if statement in the #[Test] method');
+        self::assertSame('itDoesSomething', $issues[0]->testName, 'Issue should name the #[Test] method');
+        self::assertSame('conditional_test_logic', $issues[0]->type, 'Issue type should be conditional_test_logic');
     }
 }

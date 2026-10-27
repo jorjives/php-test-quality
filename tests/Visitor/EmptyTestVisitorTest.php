@@ -39,9 +39,13 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect one empty test');
-        self::assertSame('testEmpty', $issues[0]->testName);
-        self::assertSame('empty_test', $issues[0]->type);
-        self::assertStringContainsString('no executable statements', $issues[0]->message);
+        self::assertSame('testEmpty', $issues[0]->testName, 'Issue should name the empty test');
+        self::assertSame('empty_test', $issues[0]->type, 'Issue type should be empty_test');
+        self::assertStringContainsString(
+            'no executable statements',
+            $issues[0]->message,
+            'Issue message should explain the test has no statements'
+        );
     }
 
     public function testDetectsEmptyTestMethodWithOnlyComments(): void
@@ -61,8 +65,8 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect test with only comments as empty');
-        self::assertSame('testEmptyWithComments', $issues[0]->testName);
-        self::assertSame('empty_test', $issues[0]->type);
+        self::assertSame('testEmptyWithComments', $issues[0]->testName, 'Issue should name the comment-only test');
+        self::assertSame('empty_test', $issues[0]->type, 'Issue type should be empty_test');
     }
 
     public function testIgnoresTestMethodWithStatements(): void
@@ -122,8 +126,8 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect empty test with #[Test] attribute');
-        self::assertSame('someTestWithAttribute', $issues[0]->testName);
-        self::assertSame('empty_test', $issues[0]->type);
+        self::assertSame('someTestWithAttribute', $issues[0]->testName, 'Issue should name the #[Test] method');
+        self::assertSame('empty_test', $issues[0]->type, 'Issue type should be empty_test');
     }
 
     public function testIgnoresTestWithSingleAssertion(): void
@@ -187,8 +191,8 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(2, $issues, 'Should detect multiple empty tests');
-        self::assertSame('testEmptyOne', $issues[0]->testName);
-        self::assertSame('testEmptyTwo', $issues[1]->testName);
+        self::assertSame('testEmptyOne', $issues[0]->testName, 'First issue should name the first empty test');
+        self::assertSame('testEmptyTwo', $issues[1]->testName, 'Second issue should name the second empty test');
     }
 
     public function testResetClearsIssues(): void

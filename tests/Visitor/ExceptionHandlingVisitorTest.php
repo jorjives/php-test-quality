@@ -43,9 +43,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('exception_handling', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the try/catch block');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the test containing the try/catch');
+        self::assertSame('exception_handling', $issues[0]->type, 'Issue type should be exception_handling');
     }
 
     public function testDetectsTryCatchWithMultipleCatchBlocks(): void
@@ -69,9 +69,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('exception_handling', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the try block once despite multiple catches');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the test containing the try/catch');
+        self::assertSame('exception_handling', $issues[0]->type, 'Issue type should be exception_handling');
     }
 
     public function testIgnoresTryCatchOutsideTestMethod(): void
@@ -177,11 +177,11 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('exception_handling', $issues[0]->type);
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('exception_handling', $issues[1]->type);
+        self::assertCount(2, $issues, 'Should flag each try/catch block');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the test');
+        self::assertSame('exception_handling', $issues[0]->type, 'First issue type should be exception_handling');
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the test');
+        self::assertSame('exception_handling', $issues[1]->type, 'Second issue type should be exception_handling');
     }
 
     public function testResetClearsIssues(): void
@@ -201,10 +201,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the try/catch block before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'reset() should clear all issues');
     }
 
     public function testGetTypeReturnsExceptionHandling(): void
@@ -243,9 +243,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itDoesSomething', $issues[0]->testName);
-        self::assertSame('exception_handling', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the try/catch in the #[Test] method');
+        self::assertSame('itDoesSomething', $issues[0]->testName, 'Issue should name the #[Test] method');
+        self::assertSame('exception_handling', $issues[0]->type, 'Issue type should be exception_handling');
     }
 
     public function testDetectsNestedTryCatch(): void
@@ -271,10 +271,10 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('exception_handling', $issues[0]->type);
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('exception_handling', $issues[1]->type);
+        self::assertCount(2, $issues, 'Should flag both the outer and inner try/catch blocks');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the test');
+        self::assertSame('exception_handling', $issues[0]->type, 'First issue type should be exception_handling');
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the test');
+        self::assertSame('exception_handling', $issues[1]->type, 'Second issue type should be exception_handling');
     }
 }

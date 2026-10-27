@@ -43,9 +43,17 @@ PHP;
 
         self::assertCount(1, $issues, 'Should detect constructor with initialization logic in test class');
         self::assertSame('SomeTest', $issues[0]->testName, 'Issue testName should be the class name');
-        self::assertSame('constructor_initialization', $issues[0]->type);
-        self::assertStringContainsString('constructor', $issues[0]->message);
-        self::assertStringContainsString('setUp', $issues[0]->message);
+        self::assertSame(
+            'constructor_initialization',
+            $issues[0]->type,
+            'Issue type should be constructor_initialization'
+        );
+        self::assertStringContainsString(
+            'constructor',
+            $issues[0]->message,
+            'Issue message should mention the constructor'
+        );
+        self::assertStringContainsString('setUp', $issues[0]->message, 'Issue message should suggest setUp()');
     }
 
     public function testIgnoresSetUpMethod(): void
@@ -102,8 +110,12 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect when constructor has parent::__construct() plus other logic');
-        self::assertSame('UserTest', $issues[0]->testName);
-        self::assertSame('constructor_initialization', $issues[0]->type);
+        self::assertSame('UserTest', $issues[0]->testName, 'Issue should name the offending test class');
+        self::assertSame(
+            'constructor_initialization',
+            $issues[0]->type,
+            'Issue type should be constructor_initialization'
+        );
     }
 
     public function testIgnoresConstructorWithOnlyParentCall(): void
@@ -166,7 +178,7 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the constructor before reset');
 
         $visitor->reset();
         self::assertCount(0, $visitor->getIssues(), 'reset() should clear all issues');
@@ -189,8 +201,12 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect constructors that assign to $this->property');
-        self::assertSame('ApiTest', $issues[0]->testName);
-        self::assertSame('constructor_initialization', $issues[0]->type);
+        self::assertSame('ApiTest', $issues[0]->testName, 'Issue should name the offending test class');
+        self::assertSame(
+            'constructor_initialization',
+            $issues[0]->type,
+            'Issue type should be constructor_initialization'
+        );
     }
 
     public function testDetectsConstructorWithMethodCalls(): void
@@ -210,7 +226,7 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect constructors with method calls');
-        self::assertSame('DatabaseTest', $issues[0]->testName);
+        self::assertSame('DatabaseTest', $issues[0]->testName, 'Issue should name the offending test class');
     }
 
     public function testDetectsConstructorWithStatements(): void
@@ -230,7 +246,7 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect constructors with various statements');
-        self::assertSame('LogTest', $issues[0]->testName);
+        self::assertSame('LogTest', $issues[0]->testName, 'Issue should name the offending test class');
     }
 
     public function testDetectsMultipleConstructorsInDifferentClasses(): void
@@ -256,8 +272,8 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(2, $issues, 'Should detect constructors in multiple test classes');
-        self::assertSame('FirstTest', $issues[0]->testName);
-        self::assertSame('SecondTest', $issues[1]->testName);
+        self::assertSame('FirstTest', $issues[0]->testName, 'First issue should name the first test class');
+        self::assertSame('SecondTest', $issues[1]->testName, 'Second issue should name the second test class');
     }
 
     public function testIgnoresConstructorInNestedNonTestClass(): void
@@ -301,7 +317,7 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect constructors even with comments');
-        self::assertSame('CacheTest', $issues[0]->testName);
+        self::assertSame('CacheTest', $issues[0]->testName, 'Issue should name the offending test class');
     }
 
     public function testSetCurrentFile(): void
@@ -327,8 +343,8 @@ PHP;
         $traverser->traverse($ast);
 
         $issues = $visitor->getIssues();
-        self::assertCount(1, $issues);
-        self::assertSame('/path/to/SomeTest.php', $issues[0]->file);
+        self::assertCount(1, $issues, 'Should flag the constructor');
+        self::assertSame('/path/to/SomeTest.php', $issues[0]->file, 'Issue should record the current file');
     }
 
     public function testIgnoresConstructorWithOnlyComments(): void
@@ -365,6 +381,6 @@ PHP;
         $issues = $visitor->getIssues();
 
         self::assertCount(1, $issues, 'Should detect constructors in classes extending TestCase with full namespace');
-        self::assertSame('RepositoryTest', $issues[0]->testName);
+        self::assertSame('RepositoryTest', $issues[0]->testName, 'Issue should name the offending test class');
     }
 }
