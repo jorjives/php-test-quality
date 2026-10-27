@@ -72,10 +72,14 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString('assertEquals', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag identical integer literals');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString(
+            'assertEquals',
+            $issues[0]->message,
+            'Issue message should name the assertion'
+        );
     }
 
     public function testDetectsIdenticalStringLiterals(): void
@@ -93,9 +97,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString('assertSame', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag identical string literals');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString('assertSame', $issues[0]->message, 'Issue message should name the assertion');
     }
 
     public function testDetectsIdenticalFloatLiterals(): void
@@ -113,8 +117,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag identical float literals');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
     }
 
     public function testDetectsSameVariable(): void
@@ -133,9 +137,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString('$value', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag a variable compared with itself');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString('$value', $issues[0]->message, 'Issue message should name the variable');
     }
 
     public function testDetectsAssertTrueWithTrue(): void
@@ -153,9 +157,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString('assertTrue(true)', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag assertTrue on a true literal');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString(
+            'assertTrue(true)',
+            $issues[0]->message,
+            'Issue message should quote the redundant call'
+        );
     }
 
     public function testDetectsAssertFalseWithFalse(): void
@@ -173,9 +181,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString('assertFalse(false)', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag assertFalse on a false literal');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString(
+            'assertFalse(false)',
+            $issues[0]->message,
+            'Issue message should quote the redundant call'
+        );
     }
 
     public function testDetectsAssertNullWithNull(): void
@@ -193,9 +205,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString('assertNull(null)', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag assertNull on a null literal');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString(
+            'assertNull(null)',
+            $issues[0]->message,
+            'Issue message should quote the redundant call'
+        );
     }
 
     public function testDetectsAssertEmptyWithEmptyArray(): void
@@ -213,9 +229,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString('assertEmpty([])', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag assertEmpty on an empty array');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString(
+            'assertEmpty([])',
+            $issues[0]->message,
+            'Issue message should quote the redundant call'
+        );
     }
 
     public function testDetectsAssertEmptyWithEmptyString(): void
@@ -233,9 +253,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('redundant_assertion', $issues[0]->type);
-        self::assertStringContainsString("assertEmpty('')", $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag assertEmpty on an empty string');
+        self::assertSame('redundant_assertion', $issues[0]->type, 'Issue should be a redundant assertion');
+        self::assertStringContainsString(
+            "assertEmpty('')",
+            $issues[0]->message,
+            'Issue message should quote the redundant call'
+        );
     }
 
     public function testIgnoresDifferentLiterals(): void
@@ -335,7 +359,7 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itDoesSomething', $issues[0]->testName);
+        self::assertCount(1, $issues, 'Should flag the attribute-marked test once');
+        self::assertSame('itDoesSomething', $issues[0]->testName, 'Issue should name the attribute-marked test');
     }
 }

@@ -44,9 +44,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testInterfaceMethod', $issues[0]->testName);
-        self::assertSame('interface_mock_testing', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the mock-only interface test once');
+        self::assertSame('testInterfaceMethod', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('interface_mock_testing', $issues[0]->type, 'Issue should be a mock-only interface test');
     }
 
     public function testDetectsMockOnlyInterfaceTestingWithExpects(): void
@@ -66,9 +66,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testInterfaceMethod', $issues[0]->testName);
-        self::assertSame('interface_mock_testing', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the mock-only interface test once');
+        self::assertSame('testInterfaceMethod', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('interface_mock_testing', $issues[0]->type, 'Issue should be a mock-only interface test');
     }
 
     public function testIgnoresMockOfConcreteClass(): void
@@ -151,9 +151,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testImplementsInterface', $issues[0]->testName);
-        self::assertSame('interface_implementation_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the instanceof-only test once');
+        self::assertSame('testImplementsInterface', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame(
+            'interface_implementation_test',
+            $issues[0]->type,
+            'Issue should be an implementation-only test'
+        );
     }
 
     public function testIgnoresAssertInstanceOfConcreteClass(): void
@@ -211,8 +215,12 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('interface_implementation_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the PSR interface check once');
+        self::assertSame(
+            'interface_implementation_test',
+            $issues[0]->type,
+            'Issue should be an implementation-only test'
+        );
     }
 
     public function testIgnoresInterfacePatternClassNames(): void
@@ -272,8 +280,12 @@ PHP;
         $issues = $visitor->getIssues();
 
         // Iterable matches /able$/ pattern
-        self::assertCount(1, $issues);
-        self::assertSame('interface_implementation_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should treat Iterable as an interface');
+        self::assertSame(
+            'interface_implementation_test',
+            $issues[0]->type,
+            'Issue should be an implementation-only test'
+        );
     }
 
     // ========== Edge Cases ==========
@@ -296,8 +308,12 @@ PHP;
         $issues = $visitor->getIssues();
 
         // Multiple interface checks with no other assertions should be detected
-        self::assertCount(1, $issues);
-        self::assertSame('interface_implementation_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should report one issue for the whole test');
+        self::assertSame(
+            'interface_implementation_test',
+            $issues[0]->type,
+            'Issue should be an implementation-only test'
+        );
     }
 
     public function testIgnoresNonTestMethods(): void
@@ -339,10 +355,10 @@ class SomeInterfaceTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should report the issue before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'Reset should clear all issues');
     }
 
     public function testGetTypeReturnsInterfaceMockTesting(): void
@@ -380,11 +396,11 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testMockOnlyInterface', $issues[0]->testName);
-        self::assertSame('interface_mock_testing', $issues[0]->type);
-        self::assertSame('testOnlyAssertsImplementation', $issues[1]->testName);
-        self::assertSame('interface_implementation_test', $issues[1]->type);
+        self::assertCount(2, $issues, 'Should flag each test method separately');
+        self::assertSame('testMockOnlyInterface', $issues[0]->testName, 'First issue should name the mock-only test');
+        self::assertSame('interface_mock_testing', $issues[0]->type, 'First issue should be mock-only');
+        self::assertSame('testOnlyAssertsImplementation', $issues[1]->testName, 'Second issue should name its test');
+        self::assertSame('interface_implementation_test', $issues[1]->type, 'Second issue should be instanceof-only');
     }
 
     public function testDetectsFullyQualifiedInterfaceInCreateMock(): void
@@ -404,8 +420,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('interface_mock_testing', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the fully qualified interface mock once');
+        self::assertSame('interface_mock_testing', $issues[0]->type, 'Issue should be a mock-only interface test');
     }
 
     public function testDetectsInterfaceNameWithIPrefix(): void
@@ -425,8 +441,12 @@ PHP;
         $issues = $visitor->getIssues();
 
         // IFoo matches /^I[A-Z]/ pattern
-        self::assertCount(1, $issues);
-        self::assertSame('interface_implementation_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should treat the I prefix as an interface');
+        self::assertSame(
+            'interface_implementation_test',
+            $issues[0]->type,
+            'Issue should be an implementation-only test'
+        );
     }
 
     public function testIgnoresMockWhenSutIsActuallyTestedLogic(): void
@@ -469,8 +489,12 @@ PHP;
         $issues = $visitor->getIssues();
 
         // Only asserting interface implementation with no behavior check
-        self::assertCount(1, $issues);
-        self::assertSame('interface_implementation_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the factory instanceof-only test once');
+        self::assertSame(
+            'interface_implementation_test',
+            $issues[0]->type,
+            'Issue should be an implementation-only test'
+        );
     }
 
     public function testDetectsStaticMethodMock(): void
@@ -490,8 +514,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('interface_mock_testing', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the static createMock call once');
+        self::assertSame('interface_mock_testing', $issues[0]->type, 'Issue should be a mock-only interface test');
     }
 
     public function testDetectsMockOnlyInterfaceTestingWithTestAttribute(): void
@@ -512,9 +536,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('interfaceMethodTest', $issues[0]->testName);
-        self::assertSame('interface_mock_testing', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the attribute-marked mock test once');
+        self::assertSame('interfaceMethodTest', $issues[0]->testName, 'Issue should name the attribute-marked test');
+        self::assertSame('interface_mock_testing', $issues[0]->type, 'Issue should be a mock-only interface test');
     }
 
     public function testDetectsImplementationTestWithTestAttribute(): void
@@ -534,8 +558,16 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('implementsInterfaceCheck', $issues[0]->testName);
-        self::assertSame('interface_implementation_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the attribute-marked instanceof test once');
+        self::assertSame(
+            'implementsInterfaceCheck',
+            $issues[0]->testName,
+            'Issue should name the attribute-marked test'
+        );
+        self::assertSame(
+            'interface_implementation_test',
+            $issues[0]->type,
+            'Issue should be an implementation-only test'
+        );
     }
 }

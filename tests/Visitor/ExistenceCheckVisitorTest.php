@@ -40,9 +40,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testClassExists', $issues[0]->testName);
-        self::assertSame('existence_check_assertion', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the class_exists assertion once');
+        self::assertSame('testClassExists', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('existence_check_assertion', $issues[0]->type, 'Issue should be an existence check');
     }
 
     public function testDetectsAssertTrueMethodExists(): void
@@ -60,9 +60,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testHasMethod', $issues[0]->testName);
-        self::assertSame('existence_check_assertion', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the method_exists assertion once');
+        self::assertSame('testHasMethod', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('existence_check_assertion', $issues[0]->type, 'Issue should be an existence check');
     }
 
     public function testDetectsAssertFalseClassExists(): void
@@ -80,8 +80,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('existence_check_assertion', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the negated class_exists assertion once');
+        self::assertSame('existence_check_assertion', $issues[0]->type, 'Issue should be an existence check');
     }
 
     public function testDetectsStaticCallForm(): void
@@ -99,8 +99,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('existence_check_assertion', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the static assertion call once');
+        self::assertSame('existence_check_assertion', $issues[0]->type, 'Issue should be an existence check');
     }
 
     public function testIgnoresClassExistsUsedAsGuard(): void
@@ -178,10 +178,10 @@ class SomeClassTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should report the issue before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'Reset should clear all issues');
     }
 
     public function testGetTypeReturnsExistenceCheckAssertion(): void
@@ -216,9 +216,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testClassExists', $issues[0]->testName);
-        self::assertSame('testMethodExists', $issues[1]->testName);
+        self::assertCount(2, $issues, 'Should flag each test method separately');
+        self::assertSame('testClassExists', $issues[0]->testName, 'First issue should name the class_exists test');
+        self::assertSame('testMethodExists', $issues[1]->testName, 'Second issue should name the method_exists test');
     }
 
     public function testDetectsWithTestAttribute(): void
@@ -237,7 +237,7 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('classExistsCheck', $issues[0]->testName);
+        self::assertCount(1, $issues, 'Should flag the attribute-marked test once');
+        self::assertSame('classExistsCheck', $issues[0]->testName, 'Issue should name the attribute-marked test');
     }
 }

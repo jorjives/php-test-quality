@@ -73,9 +73,9 @@ PHP);
         $analyzer->addVisitor(new AssertionCountVisitor());
         $result = $analyzer->analyzeDirectory($this->fixtureDir);
 
-        self::assertSame(2, $result->filesScanned);
-        self::assertSame(3, $result->testsFound);
-        self::assertCount(2, $result->issues);
+        self::assertSame(2, $result->filesScanned, 'Both nested test files should be scanned');
+        self::assertSame(3, $result->testsFound, 'Every test method across both files should be found');
+        self::assertCount(2, $result->issues, 'Each test without assertions should be reported');
     }
 
     public function testIgnoresNonTestFiles(): void
@@ -122,8 +122,12 @@ PHP;
         $analyzer->addVisitor(new AssertionCountVisitor());
         $result = $analyzer->analyzeFiles($this->fixtureDir, [$this->fixtureDir . '/Unit/ListedTest.php']);
 
-        self::assertSame(1, $result->filesScanned);
-        self::assertSame(['Unit/ListedTest.php'], array_map(fn($i) => $i->file, $result->issues));
+        self::assertSame(1, $result->filesScanned, 'Only the listed file should be scanned');
+        self::assertSame(
+            ['Unit/ListedTest.php'],
+            array_map(fn($i) => $i->file, $result->issues),
+            'Issue paths should be relative to the base directory',
+        );
     }
 
     public function testSkipsListedFilesThatAreNotTests(): void
@@ -164,8 +168,8 @@ PHP);
             $analyzer->addVisitor(new AssertionCountVisitor());
             $result = $analyzer->analyzeDirectory($this->fixtureDir);
 
-            self::assertSame(1, $result->filesScanned);
-            self::assertCount(1, $result->issues);
+            self::assertSame(1, $result->filesScanned, 'Symlinked test should be scanned');
+            self::assertCount(1, $result->issues, 'Symlinked test should be analysed for issues');
         } finally {
             $this->removeDirectory($outsideDir);
         }
@@ -186,9 +190,9 @@ PHP);
         $analyzer->addVisitor(new AssertionCountVisitor());
         $result = $analyzer->analyzeDirectory($this->fixtureDir);
 
-        self::assertSame(0, $result->filesScanned);
-        self::assertSame(0, $result->testsFound);
-        self::assertFalse($result->hasIssues());
+        self::assertSame(0, $result->filesScanned, 'Empty directory should have no files scanned');
+        self::assertSame(0, $result->testsFound, 'Empty directory should have no tests found');
+        self::assertFalse($result->hasIssues(), 'Empty directory should produce no issues');
     }
 
     public function testGetRegisteredTypesReturnsTypeAndNameForEachVisitor(): void
@@ -198,9 +202,9 @@ PHP);
 
         $types = $analyzer->getRegisteredTypes();
 
-        self::assertCount(1, $types);
-        self::assertSame('no_assertions', $types[0]['type']);
-        self::assertSame('Assertion Count', $types[0]['name']);
+        self::assertCount(1, $types, 'One type should be registered per visitor');
+        self::assertSame('no_assertions', $types[0]['type'], 'Registered type should carry the visitor type');
+        self::assertSame('Assertion Count', $types[0]['name'], 'Registered type should carry the visitor name');
     }
 
     public function testGetRegisteredTypesReturnsEmptyArrayWhenNoVisitors(): void

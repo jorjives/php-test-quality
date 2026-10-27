@@ -14,10 +14,10 @@ final class AnalysisResultTest extends TestCase
     {
         $result = new AnalysisResult(filesScanned: 10, testsFound: 50, issues: []);
 
-        self::assertSame(10, $result->filesScanned);
-        self::assertSame(50, $result->testsFound);
-        self::assertFalse($result->hasIssues());
-        self::assertSame([], $result->issues);
+        self::assertSame(10, $result->filesScanned, 'Result should keep the files scanned count');
+        self::assertSame(50, $result->testsFound, 'Result should keep the tests found count');
+        self::assertFalse($result->hasIssues(), 'Result without issues should report none');
+        self::assertSame([], $result->issues, 'Issue list should be empty');
     }
 
     public function testResultWithIssuesHasIssues(): void
@@ -25,8 +25,8 @@ final class AnalysisResultTest extends TestCase
         $issue = new Issue('test.php', 'testX', 'no_assertions', 'No assertions');
         $result = new AnalysisResult(filesScanned: 1, testsFound: 1, issues: [$issue]);
 
-        self::assertTrue($result->hasIssues());
-        self::assertCount(1, $result->issues);
+        self::assertTrue($result->hasIssues(), 'Result with an issue should report issues');
+        self::assertCount(1, $result->issues, 'Result should hold the single issue');
     }
 
     public function testToJsonReturnsValidJson(): void
@@ -37,10 +37,10 @@ final class AnalysisResultTest extends TestCase
         $json = $result->toJson();
         $decoded = json_decode($json, true);
 
-        self::assertSame(1, $decoded['summary']['files_scanned']);
-        self::assertSame(1, $decoded['summary']['tests_found']);
-        self::assertSame(1, $decoded['issues']['no_assertions']);
-        self::assertCount(1, $decoded['details']);
+        self::assertSame(1, $decoded['summary']['files_scanned'], 'JSON summary should include files scanned');
+        self::assertSame(1, $decoded['summary']['tests_found'], 'JSON summary should include tests found');
+        self::assertSame(1, $decoded['issues']['no_assertions'], 'JSON should count issues by type');
+        self::assertCount(1, $decoded['details'], 'JSON details should list each issue');
     }
 
     public function testGetIssueCounts(): void
@@ -54,8 +54,8 @@ final class AnalysisResultTest extends TestCase
 
         $counts = $result->getIssueCounts();
 
-        self::assertSame(2, $counts['no_assertions']);
-        self::assertSame(1, $counts['other_type']);
+        self::assertSame(2, $counts['no_assertions'], 'Both no_assertions issues should be counted');
+        self::assertSame(1, $counts['other_type'], 'The other_type issue should be counted separately');
     }
 
     public function testToTextWithNoIssuesShowsSuccess(): void
@@ -64,11 +64,11 @@ final class AnalysisResultTest extends TestCase
 
         $text = $result->toText();
 
-        self::assertStringContainsString('TEST QUALITY ANALYSIS REPORT', $text);
-        self::assertStringContainsString('Files scanned: 10', $text);
-        self::assertStringContainsString('Tests found: 50', $text);
-        self::assertStringContainsString('✓ No issues detected!', $text);
-        self::assertStringNotContainsString('ISSUES DETECTED', $text);
+        self::assertStringContainsString('TEST QUALITY ANALYSIS REPORT', $text, 'Report should have its title');
+        self::assertStringContainsString('Files scanned: 10', $text, 'Report should show files scanned');
+        self::assertStringContainsString('Tests found: 50', $text, 'Report should show tests found');
+        self::assertStringContainsString('✓ No issues detected!', $text, 'Report should announce a clean run');
+        self::assertStringNotContainsString('ISSUES DETECTED', $text, 'Clean report should have no issues section');
     }
 
     public function testToTextWithIssuesShowsDetails(): void
@@ -82,20 +82,20 @@ final class AnalysisResultTest extends TestCase
 
         $text = $result->toText();
 
-        self::assertStringContainsString('TEST QUALITY ANALYSIS REPORT', $text);
-        self::assertStringContainsString('Files scanned: 2', $text);
-        self::assertStringContainsString('Tests found: 3', $text);
-        self::assertStringContainsString('ISSUES DETECTED', $text);
-        self::assertStringContainsString('No assertions: 2', $text);
-        self::assertStringContainsString('TOTAL: 3', $text);
-        self::assertStringContainsString('DETAILED FINDINGS', $text);
-        self::assertStringContainsString('📁 tests/UserTest.php', $text);
-        self::assertStringContainsString('testUserCreation', $text);
-        self::assertStringContainsString('testUserUpdate', $text);
-        self::assertStringContainsString('📁 tests/ProductTest.php', $text);
-        self::assertStringContainsString('testProductPrice', $text);
-        self::assertStringContainsString('Test has no assertions', $text);
-        self::assertStringContainsString('Some other issue', $text);
+        self::assertStringContainsString('TEST QUALITY ANALYSIS REPORT', $text, 'Report should have its title');
+        self::assertStringContainsString('Files scanned: 2', $text, 'Report should show files scanned');
+        self::assertStringContainsString('Tests found: 3', $text, 'Report should show tests found');
+        self::assertStringContainsString('ISSUES DETECTED', $text, 'Report should have an issues section');
+        self::assertStringContainsString('No assertions: 2', $text, 'Report should count issues by type');
+        self::assertStringContainsString('TOTAL: 3', $text, 'Report should show the total issue count');
+        self::assertStringContainsString('DETAILED FINDINGS', $text, 'Report should have a findings section');
+        self::assertStringContainsString('📁 tests/UserTest.php', $text, 'Findings should name the first file');
+        self::assertStringContainsString('testUserCreation', $text, 'Findings should name the first failing test');
+        self::assertStringContainsString('testUserUpdate', $text, 'Findings should name the second failing test');
+        self::assertStringContainsString('📁 tests/ProductTest.php', $text, 'Findings should name the second file');
+        self::assertStringContainsString('testProductPrice', $text, 'Findings should name the test in the second file');
+        self::assertStringContainsString('Test has no assertions', $text, 'Findings should include the no_assertions message');
+        self::assertStringContainsString('Some other issue', $text, 'Findings should include the other_type message');
     }
 
     public function testToTextShowsChecksRun(): void
@@ -109,9 +109,9 @@ final class AnalysisResultTest extends TestCase
 
         $text = $result->toText();
 
-        self::assertStringContainsString('CHECKS RUN', $text);
-        self::assertStringContainsString('✓ Assertion Count', $text);
-        self::assertStringContainsString('✓ Sleepy Test', $text);
-        self::assertStringContainsString('✓ Redundant Print', $text);
+        self::assertStringContainsString('CHECKS RUN', $text, 'Report should have a checks run section');
+        self::assertStringContainsString('✓ Assertion Count', $text, 'Report should list the Assertion Count check');
+        self::assertStringContainsString('✓ Sleepy Test', $text, 'Report should list the Sleepy Test check');
+        self::assertStringContainsString('✓ Redundant Print', $text, 'Report should list the Redundant Print check');
     }
 }

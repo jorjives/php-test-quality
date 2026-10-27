@@ -16,11 +16,15 @@ final class ConfigurationTest extends TestCase
     {
         $config = Configuration::defaults();
 
-        self::assertSame(40, $config->getLongTestThreshold());
-        self::assertSame(MagicNumberTestVisitor::DEFAULT_TRIVIAL_VALUES, $config->getMagicNumberAllowlist());
-        self::assertNull($config->getEnabledDetectors());
-        self::assertSame([], $config->getDisabledDetectors());
-        self::assertSame('.tq-baseline.json', $config->getBaselinePath());
+        self::assertSame(40, $config->getLongTestThreshold(), 'Default long test threshold should apply');
+        self::assertSame(
+            MagicNumberTestVisitor::DEFAULT_TRIVIAL_VALUES,
+            $config->getMagicNumberAllowlist(),
+            'Default allowlist should be the trivial values',
+        );
+        self::assertNull($config->getEnabledDetectors(), 'All detectors should be enabled by default');
+        self::assertSame([], $config->getDisabledDetectors(), 'No detectors should be disabled by default');
+        self::assertSame('.tq-baseline.json', $config->getBaselinePath(), 'Default baseline path should apply');
     }
 
     public function testFromFileLoadsLongTestThreshold(): void
@@ -56,14 +60,14 @@ final class ConfigurationTest extends TestCase
             $allowlist = $config->getMagicNumberAllowlist();
             // Base defaults are all present
             foreach (MagicNumberTestVisitor::DEFAULT_TRIVIAL_VALUES as $value) {
-                self::assertContains($value, $allowlist);
+                self::assertContains($value, $allowlist, 'Allowlist should keep every default value');
             }
             // Extras are appended
-            self::assertContains(42, $allowlist);
-            self::assertContains(99, $allowlist);
+            self::assertContains(42, $allowlist, 'Allowlist should include the first extra value');
+            self::assertContains(99, $allowlist, 'Allowlist should include the second extra value');
             // Total count: defaults + 2 extras (42 and 99 are not in defaults)
             $expectedCount = count(MagicNumberTestVisitor::DEFAULT_TRIVIAL_VALUES) + 2;
-            self::assertCount($expectedCount, $allowlist);
+            self::assertCount($expectedCount, $allowlist, 'Allowlist should be the defaults plus the extras');
         } finally {
             unlink($file);
         }
@@ -86,11 +90,15 @@ final class ConfigurationTest extends TestCase
     public function testMergeOverridesScalars(): void
     {
         $base = Configuration::defaults();
-        $override = Configuration::fromFile($this->writeTempYaml("thresholds:\n  long_test: 10\n"));
+        $overrideFile = $this->writeTempYaml("thresholds:\n  long_test: 10\n");
 
-        $merged = $base->merge($override);
-
-        self::assertSame(10, $merged->getLongTestThreshold());
+        try {
+            $override = Configuration::fromFile($overrideFile);
+            $merged = $base->merge($override);
+            self::assertSame(10, $merged->getLongTestThreshold());
+        } finally {
+            unlink($overrideFile);
+        }
     }
 
     public function testMergeReplacesAllowlist(): void
@@ -117,8 +125,8 @@ final class ConfigurationTest extends TestCase
             $override = Configuration::fromFile($overrideFile);
             $merged = $base->merge($override);
             $allowlist = $merged->getMagicNumberAllowlist();
-            self::assertContains(42, $allowlist);
-            self::assertContains(99, $allowlist);
+            self::assertContains(42, $allowlist, 'Merged allowlist should keep the base extra');
+            self::assertContains(99, $allowlist, 'Merged allowlist should add the override extra');
         } finally {
             unlink($baseFile);
             unlink($overrideFile);
@@ -134,8 +142,16 @@ final class ConfigurationTest extends TestCase
             $base = Configuration::fromFile($baseFile);
             $override = Configuration::fromFile($overrideFile);
             $merged = $base->merge($override);
-            self::assertContains('no_assertions', $merged->getDisabledDetectors());
-            self::assertContains('long_test', $merged->getDisabledDetectors());
+            self::assertContains(
+                'no_assertions',
+                $merged->getDisabledDetectors(),
+                'Merged config should keep the base disabled detector',
+            );
+            self::assertContains(
+                'long_test',
+                $merged->getDisabledDetectors(),
+                'Merged config should add the override disabled detector',
+            );
         } finally {
             unlink($baseFile);
             unlink($overrideFile);

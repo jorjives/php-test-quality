@@ -89,15 +89,19 @@ final class BaselineTest extends TestCase
         $json = Baseline::generate($issues, null, $reason);
         $decoded = json_decode($json, true);
 
-        self::assertArrayHasKey('generated', $decoded);
-        self::assertCount(2, $decoded['issues']);
-        self::assertSame('test.php', $decoded['issues'][0]['file']);
-        self::assertSame('testX', $decoded['issues'][0]['test']);
+        self::assertArrayHasKey('generated', $decoded, 'Baseline should record when it was generated');
+        self::assertCount(2, $decoded['issues'], 'Baseline should list every issue');
+        self::assertSame('test.php', $decoded['issues'][0]['file'], 'Entry should keep the issue file');
+        self::assertSame('testX', $decoded['issues'][0]['test'], 'Entry should keep the issue test name');
         // Verify added_at timestamp is present
-        self::assertArrayHasKey('added_at', $decoded['issues'][0]);
-        self::assertArrayHasKey('added_at', $decoded['issues'][1]);
+        self::assertArrayHasKey('added_at', $decoded['issues'][0], 'First entry should have an added_at timestamp');
+        self::assertArrayHasKey('added_at', $decoded['issues'][1], 'Second entry should have an added_at timestamp');
         // Verify timestamps are valid ISO 8601 format
-        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $decoded['issues'][0]['added_at']);
+        self::assertMatchesRegularExpression(
+            '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/',
+            $decoded['issues'][0]['added_at'],
+            'added_at should be an ISO 8601 timestamp',
+        );
     }
 
     public function testFilterRemovesBaselinedIssues(): void
@@ -113,8 +117,8 @@ final class BaselineTest extends TestCase
 
         $filtered = $baseline->filter($issues);
 
-        self::assertCount(1, $filtered);
-        self::assertSame('other.php', $filtered[0]->file);
+        self::assertCount(1, $filtered, 'Baselined issue should be filtered out');
+        self::assertSame('other.php', $filtered[0]->file, 'Issue not in the baseline should remain');
     }
 
     public function testGenerateWithSingleTypeFilter(): void
@@ -128,11 +132,11 @@ final class BaselineTest extends TestCase
         $json = Baseline::generate($issues, ['no_assertions']);
         $decoded = json_decode($json, true);
 
-        self::assertCount(2, $decoded['issues']);
-        self::assertSame('test.php', $decoded['issues'][0]['file']);
-        self::assertSame('third.php', $decoded['issues'][1]['file']);
-        self::assertSame('no_assertions', $decoded['issues'][0]['type']);
-        self::assertSame('no_assertions', $decoded['issues'][1]['type']);
+        self::assertCount(2, $decoded['issues'], 'Only issues of the filtered type should be kept');
+        self::assertSame('test.php', $decoded['issues'][0]['file'], 'First matching issue should come first');
+        self::assertSame('third.php', $decoded['issues'][1]['file'], 'Second matching issue should come second');
+        self::assertSame('no_assertions', $decoded['issues'][0]['type'], 'First entry should have the filtered type');
+        self::assertSame('no_assertions', $decoded['issues'][1]['type'], 'Second entry should have the filtered type');
     }
 
     public function testGenerateWithMultipleTypeFilters(): void
@@ -146,9 +150,17 @@ final class BaselineTest extends TestCase
         $json = Baseline::generate($issues, ['no_assertions', 'magic_number_test']);
         $decoded = json_decode($json, true);
 
-        self::assertCount(2, $decoded['issues']);
-        self::assertContains('no_assertions', array_map(fn($i) => $i['type'], $decoded['issues']));
-        self::assertContains('magic_number_test', array_map(fn($i) => $i['type'], $decoded['issues']));
+        self::assertCount(2, $decoded['issues'], 'Issues of either filtered type should be kept');
+        self::assertContains(
+            'no_assertions',
+            array_map(fn($i) => $i['type'], $decoded['issues']),
+            'Baseline should include the no_assertions issue',
+        );
+        self::assertContains(
+            'magic_number_test',
+            array_map(fn($i) => $i['type'], $decoded['issues']),
+            'Baseline should include the magic_number_test issue',
+        );
     }
 
     public function testGenerateWithEmptyTypeFilterReturnsAll(): void
@@ -188,9 +200,9 @@ final class BaselineTest extends TestCase
         $json = Baseline::generate($issues, null, $reason);
         $decoded = json_decode($json, true);
 
-        self::assertCount(2, $decoded['issues']);
-        self::assertSame($reason, $decoded['issues'][0]['reason']);
-        self::assertSame($reason, $decoded['issues'][1]['reason']);
+        self::assertCount(2, $decoded['issues'], 'Baseline should list every issue');
+        self::assertSame($reason, $decoded['issues'][0]['reason'], 'First entry should carry the given reason');
+        self::assertSame($reason, $decoded['issues'][1]['reason'], 'Second entry should carry the given reason');
     }
 
     public function testGenerateWithReasonAndTypeFilter(): void
@@ -205,9 +217,9 @@ final class BaselineTest extends TestCase
         $json = Baseline::generate($issues, ['no_assertions'], $reason);
         $decoded = json_decode($json, true);
 
-        self::assertCount(2, $decoded['issues']);
-        self::assertSame($reason, $decoded['issues'][0]['reason']);
-        self::assertSame($reason, $decoded['issues'][1]['reason']);
+        self::assertCount(2, $decoded['issues'], 'Only issues of the filtered type should be kept');
+        self::assertSame($reason, $decoded['issues'][0]['reason'], 'First filtered entry should carry the reason');
+        self::assertSame($reason, $decoded['issues'][1]['reason'], 'Second filtered entry should carry the reason');
     }
 
     public function testGenerateWithEmptyReasonString(): void
@@ -232,13 +244,13 @@ final class BaselineTest extends TestCase
         $json = $baseline->toJson();
         $decoded = json_decode($json, true);
 
-        self::assertArrayHasKey('generated', $decoded);
-        self::assertArrayHasKey('issues', $decoded);
-        self::assertCount(2, $decoded['issues']);
-        self::assertSame('test.php', $decoded['issues'][0]['file']);
-        self::assertSame('testX', $decoded['issues'][0]['test']);
-        self::assertSame('no_assertions', $decoded['issues'][0]['type']);
-        self::assertSame('Known issue', $decoded['issues'][0]['reason']);
+        self::assertArrayHasKey('generated', $decoded, 'JSON should record when it was generated');
+        self::assertArrayHasKey('issues', $decoded, 'JSON should have an issues list');
+        self::assertCount(2, $decoded['issues'], 'JSON should include every entry');
+        self::assertSame('test.php', $decoded['issues'][0]['file'], 'Entry should keep its file');
+        self::assertSame('testX', $decoded['issues'][0]['test'], 'Entry should keep its test name');
+        self::assertSame('no_assertions', $decoded['issues'][0]['type'], 'Entry should keep its type');
+        self::assertSame('Known issue', $decoded['issues'][0]['reason'], 'Entry should keep its reason');
     }
 
     public function testMergeAddsNewIssues(): void
@@ -271,12 +283,12 @@ final class BaselineTest extends TestCase
         $entries = $merged->toArray();
 
         // Should have 2 entries (original + new issue, duplicate removed)
-        self::assertCount(2, $entries);
+        self::assertCount(2, $entries, 'Duplicate issue should not be added twice');
 
         // Check that the entries are what we expect
         $files = array_column($entries, 'file');
-        self::assertContains('test.php', $files);
-        self::assertContains('other.php', $files);
+        self::assertContains('test.php', $files, 'Baseline should keep the existing entry');
+        self::assertContains('other.php', $files, 'Baseline should gain the new entry');
     }
 
     public function testMergePreservesReason(): void
@@ -294,8 +306,8 @@ final class BaselineTest extends TestCase
 
         // Find the original entry
         $original = array_filter($entries, fn($e) => $e['file'] === 'test.php')[0] ?? null;
-        self::assertNotNull($original);
-        self::assertSame('Original reason', $original['reason']);
+        self::assertNotNull($original, 'Original entry should survive the merge');
+        self::assertSame('Original reason', $original['reason'], 'Original entry should keep its reason');
     }
 
     public function testMergeWithEmptyBaseline(): void
@@ -327,18 +339,18 @@ final class BaselineTest extends TestCase
         $merged = $baseline->merge($newIssues, 'Added via automation');
         $entries = $merged->toArray();
 
-        self::assertCount(3, $entries);
+        self::assertCount(3, $entries, 'Merge should keep the existing entry and add both new ones');
 
         // Original entry keeps its reason
         $existing = array_values(array_filter($entries, fn($e) => $e['file'] === 'existing.php'))[0];
-        self::assertSame('Original reason', $existing['reason']);
+        self::assertSame('Original reason', $existing['reason'], 'Existing entry should keep its own reason');
 
         // New entries get the provided reason
         $new1 = array_values(array_filter($entries, fn($e) => $e['file'] === 'test.php'))[0];
-        self::assertSame('Added via automation', $new1['reason']);
+        self::assertSame('Added via automation', $new1['reason'], 'First new entry should get the merge reason');
 
         $new2 = array_values(array_filter($entries, fn($e) => $e['file'] === 'other.php'))[0];
-        self::assertSame('Added via automation', $new2['reason']);
+        self::assertSame('Added via automation', $new2['reason'], 'Second new entry should get the merge reason');
     }
 
     public function testMergeAddsTimestampToNewEntries(): void
@@ -356,12 +368,20 @@ final class BaselineTest extends TestCase
 
         // Original entry preserves its timestamp
         $existing = array_values(array_filter($entries, fn($e) => $e['file'] === 'existing.php'))[0];
-        self::assertSame('2024-01-01T00:00:00+00:00', $existing['added_at']);
+        self::assertSame(
+            '2024-01-01T00:00:00+00:00',
+            $existing['added_at'],
+            'Existing entry should keep its original timestamp',
+        );
 
         // New entry has a timestamp
         $new = array_values(array_filter($entries, fn($e) => $e['file'] === 'new.php'))[0];
-        self::assertArrayHasKey('added_at', $new);
-        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $new['added_at']);
+        self::assertArrayHasKey('added_at', $new, 'New entry should get an added_at timestamp');
+        self::assertMatchesRegularExpression(
+            '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/',
+            $new['added_at'],
+            'New entry timestamp should be in ISO 8601 format',
+        );
     }
 
     public function testToArrayReturnsEntries(): void
@@ -372,8 +392,8 @@ final class BaselineTest extends TestCase
 
         $entries = $baseline->toArray();
 
-        self::assertCount(1, $entries);
-        self::assertSame('test.php', $entries[0]['file']);
+        self::assertCount(1, $entries, 'toArray should return the single entry');
+        self::assertSame('test.php', $entries[0]['file'], 'Returned entry should keep its file');
     }
 
     public function testMergeMultipleBaselines(): void
@@ -389,9 +409,9 @@ final class BaselineTest extends TestCase
         $merged = $baseline1->mergeBaselines([$baseline2]);
         $entries = $merged->toArray();
 
-        self::assertCount(2, $entries);
-        self::assertSame('test.php', $entries[0]['file']);
-        self::assertSame('other.php', $entries[1]['file']);
+        self::assertCount(2, $entries, 'Merged baseline should hold entries from both baselines');
+        self::assertSame('test.php', $entries[0]['file'], 'Entries from the first baseline should come first');
+        self::assertSame('other.php', $entries[1]['file'], 'Entries from the second baseline should follow');
     }
 
     public function testMergeMultipleBaselinesDeduplicates(): void
@@ -429,10 +449,10 @@ final class BaselineTest extends TestCase
         $merged = $baseline1->mergeBaselines([$baseline2, $baseline3]);
         $entries = $merged->toArray();
 
-        self::assertCount(3, $entries);
-        self::assertSame('test1.php', $entries[0]['file']);
-        self::assertSame('test2.php', $entries[1]['file']);
-        self::assertSame('test3.php', $entries[2]['file']);
+        self::assertCount(3, $entries, 'Merged baseline should hold entries from all three baselines');
+        self::assertSame('test1.php', $entries[0]['file'], 'First baseline entry should come first');
+        self::assertSame('test2.php', $entries[1]['file'], 'Second baseline entry should come second');
+        self::assertSame('test3.php', $entries[2]['file'], 'Third baseline entry should come last');
     }
 
     public function testMergeMultipleBaselinesWithEmptyArray(): void
@@ -444,8 +464,8 @@ final class BaselineTest extends TestCase
         $merged = $baseline->mergeBaselines([]);
         $entries = $merged->toArray();
 
-        self::assertCount(1, $entries);
-        self::assertSame('test.php', $entries[0]['file']);
+        self::assertCount(1, $entries, 'Merging nothing should leave the baseline unchanged');
+        self::assertSame('test.php', $entries[0]['file'], 'Baseline should keep the existing entry');
     }
 
     public function testMergeMultipleBaselinesPreservesOrderAndDeduplicates(): void
@@ -464,10 +484,10 @@ final class BaselineTest extends TestCase
         $entries = $merged->toArray();
 
         // Should have 3 entries (1 deduplicated)
-        self::assertCount(3, $entries);
+        self::assertCount(3, $entries, 'Shared entry should appear only once');
         $files = array_column($entries, 'file');
-        self::assertContains('test1.php', $files);
-        self::assertContains('test2.php', $files);
-        self::assertContains('test3.php', $files);
+        self::assertContains('test1.php', $files, 'Entry only in the first baseline should be kept');
+        self::assertContains('test2.php', $files, 'Shared entry should be kept');
+        self::assertContains('test3.php', $files, 'Entry only in the second baseline should be added');
     }
 }

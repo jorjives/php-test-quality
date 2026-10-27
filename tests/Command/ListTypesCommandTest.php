@@ -21,7 +21,7 @@ final class ListTypesCommandTest extends TestCase
         $tester->execute([]);
 
         $output = $tester->getDisplay();
-        self::assertSame(0, $tester->getStatusCode());
+        self::assertSame(0, $tester->getStatusCode(), 'list-types should exit successfully');
 
         $expectedTypes = [
             'no_assertions', 'assertion_roulette', 'constructor_initialization',

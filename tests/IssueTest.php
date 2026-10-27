@@ -18,10 +18,10 @@ final class IssueTest extends TestCase
             message: 'Test has no assertions'
         );
 
-        self::assertSame('test/Unit/SomeTest.php', $issue->file);
-        self::assertSame('testSomething', $issue->testName);
-        self::assertSame('no_assertions', $issue->type);
-        self::assertSame('Test has no assertions', $issue->message);
+        self::assertSame('test/Unit/SomeTest.php', $issue->file, 'Issue should keep the file path');
+        self::assertSame('testSomething', $issue->testName, 'Issue should name the failing test');
+        self::assertSame('no_assertions', $issue->type, 'Issue should keep its type');
+        self::assertSame('Test has no assertions', $issue->message, 'Issue should keep its message');
     }
 
     public function testIssueConvertsToArray(): void

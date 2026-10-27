@@ -40,10 +40,10 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('magic_number_test', $issues[0]->type);
-        self::assertStringContainsString('12345', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the magic number');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('magic_number_test', $issues[0]->type, 'Issue should be a magic number finding');
+        self::assertStringContainsString('12345', $issues[0]->message, 'Issue message should quote the magic number');
     }
 
     public function testDetectsMagicFloatInAssertEquals(): void
@@ -61,10 +61,10 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('magic_number_test', $issues[0]->type);
-        self::assertStringContainsString('3.14159', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the magic float');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('magic_number_test', $issues[0]->type, 'Issue should be a magic number finding');
+        self::assertStringContainsString('3.14159', $issues[0]->message, 'Issue message should quote the magic float');
     }
 
     public function testIgnoresTrivialValues(): void
@@ -103,9 +103,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertStringContainsString('assertSame', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the magic number in assertSame');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertStringContainsString('assertSame', $issues[0]->message, 'Issue message should name the assertion');
     }
 
     public function testDetectsMagicNumberInComparisonAssertions(): void
@@ -125,9 +125,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertStringContainsString('999', $issues[0]->message);
-        self::assertStringContainsString('5000', $issues[1]->message);
+        self::assertCount(2, $issues, 'Should flag both comparison assertions');
+        self::assertStringContainsString('999', $issues[0]->message, 'First issue should quote its magic number');
+        self::assertStringContainsString('5000', $issues[1]->message, 'Second issue should quote its magic number');
     }
 
     public function testDetectsMagicNumberInAssertCount(): void
@@ -146,9 +146,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('42', $issues[0]->message);
-        self::assertStringContainsString('assertCount', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the magic number in assertCount');
+        self::assertStringContainsString('42', $issues[0]->message, 'Issue message should quote the magic number');
+        self::assertStringContainsString('assertCount', $issues[0]->message, 'Issue message should name the assertion');
     }
 
     public function testIgnoresMagicNumbersOutsideTestMethod(): void
@@ -191,8 +191,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itCalculatesCorrectly', $issues[0]->testName);
+        self::assertCount(1, $issues, 'Should flag the magic number in the attribute-marked test');
+        self::assertSame('itCalculatesCorrectly', $issues[0]->testName, 'Issue should name the attribute-marked test');
     }
 
     public function testResetClearsIssues(): void
@@ -209,10 +209,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should report the issue before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'Reset should clear all issues');
     }
 
     public function testGetTypeReturnsMagicNumberTest(): void
@@ -247,10 +247,10 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(3, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('testSomething', $issues[2]->testName);
+        self::assertCount(3, $issues, 'Should flag every magic number in the test');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the offending test');
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the offending test');
+        self::assertSame('testSomething', $issues[2]->testName, 'Third issue should name the offending test');
     }
 
     public function testDetectsNegativeMagicNumbers(): void
@@ -269,9 +269,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertStringContainsString('-100', $issues[0]->message);
-        self::assertStringContainsString('-50', $issues[1]->message);
+        self::assertCount(2, $issues, 'Should flag both negative magic numbers');
+        self::assertStringContainsString('-100', $issues[0]->message, 'First issue should quote the negative number');
+        self::assertStringContainsString('-50', $issues[1]->message, 'Second issue should quote the negative number');
     }
 
     public function testCustomAllowlistPermitsSpecificNumbers(): void
