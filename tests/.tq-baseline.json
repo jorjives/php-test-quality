@@ -1,0 +1,159 @@
+{
+    "generated": "2026-10-27T09:24:19+00:00",
+    "issues": [
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testFromFileLoadsLongTestThreshold",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testMagicNumberAllowlistReplacesDefault",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testMagicNumberAllowlistExtraAppendsToDefault",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testMagicNumberAllowlistWithExtraCombines",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testMergeOverridesScalars",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testMergeReplacesAllowlist",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testMergeUnionsAllowlistExtra",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testMergeUnionsDisabledDetectors",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testDetectorsEnabledList",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testDetectorsDisabledList",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testEnabledAllTreatedAsEnableAllDetectors",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testDisabledAllTreatedAsDisableAllDetectors",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testInvalidThresholdThrows",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testInvalidYamlThrows",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "ConfigurationTest.php",
+            "test": "testBaselinePathFromConfig",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "BaselineTest.php",
+            "test": "testLoadsFromJsonFile",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "AnalyzerTest.php",
+            "test": "testDirectoryScanIncludesSymlinkedTestsWhoseTargetIsOutsideTheDirectory",
+            "type": "exception_handling",
+            "reason": "try\/finally cleanup with no catch is not exception handling; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:18+00:00"
+        },
+        {
+            "file": "CliIntegrationTest.php",
+            "test": "testGenerateBaselineWithForceOverwritesExisting",
+            "type": "mystery_guest",
+            "reason": "CommandTester::execute()\/Application::find() and reading back CLI-written output are not mystery guests; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:19+00:00"
+        },
+        {
+            "file": "CliIntegrationTest.php",
+            "test": "testAddToBaselineAddsTimestamps",
+            "type": "mystery_guest",
+            "reason": "CommandTester::execute()\/Application::find() and reading back CLI-written output are not mystery guests; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:19+00:00"
+        },
+        {
+            "file": "Command\/AnalyzeCommandTest.php",
+            "test": "testGenerateBaselineCreatesFile",
+            "type": "mystery_guest",
+            "reason": "CommandTester::execute()\/Application::find() and reading back CLI-written output are not mystery guests; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:19+00:00"
+        },
+        {
+            "file": "Command\/AnalyzeCommandTest.php",
+            "test": "testAddToBaselineAppendsIssues",
+            "type": "mystery_guest",
+            "reason": "CommandTester::execute()\/Application::find() and reading back CLI-written output are not mystery guests; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:19+00:00"
+        },
+        {
+            "file": "Command\/ListTypesCommandTest.php",
+            "test": "testListsAllDetectorTypes",
+            "type": "mystery_guest",
+            "reason": "CommandTester::execute()\/Application::find() and reading back CLI-written output are not mystery guests; detector false positive, see #16",
+            "added_at": "2026-10-27T09:24:19+00:00"
+        }
+    ]
+}

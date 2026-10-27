@@ -27,6 +27,9 @@ jobs:
       - name: Run static analysis
         run: composer analyze
 
+      - name: Scan own tests for smells
+        run: php bin/tq tests/ --baseline=.tq-baseline.json
+
   phar:
     runs-on: ubuntu-latest
     needs: test
