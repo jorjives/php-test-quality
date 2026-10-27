@@ -8,6 +8,16 @@ use PHPUnit\Framework\TestCase;
 
 final class CliIntegrationTest extends TestCase
 {
+    private const NO_ASSERTIONS_TEST = <<<'PHP'
+<?php
+use PHPUnit\Framework\TestCase;
+class %s extends TestCase {
+    public function %s(): void {
+        // Test with no assertions
+    }
+}
+PHP;
+
     private string $tempDir;
     private string $analyzeScript;
 
@@ -37,128 +47,111 @@ final class CliIntegrationTest extends TestCase
         rmdir($dir);
     }
 
-    public function testGenerateBaselineRequiresReason(): void
+    /**
+     * Run tq against the temp directory with the given extra arguments.
+     *
+     * @return array{int, string} Exit code and combined stdout/stderr
+     */
+    private function runTq(string $arguments): array
     {
         $output = [];
         $returnCode = 0;
 
         exec(
-            sprintf('php %s %s --generate-baseline --baseline=.tq-baseline.json 2>&1', escapeshellarg($this->analyzeScript), escapeshellarg($this->tempDir)),
+            sprintf(
+                'php %s %s %s 2>&1',
+                escapeshellarg($this->analyzeScript),
+                escapeshellarg($this->tempDir),
+                $arguments
+            ),
             $output,
             $returnCode
         );
 
+        return [$returnCode, implode("\n", $output)];
+    }
+
+    /**
+     * @param array<array<string, string>> $issues
+     */
+    private function writeBaseline(array $issues, string $generated = '2020-01-01T00:00:00+00:00'): string
+    {
+        $baselinePath = $this->tempDir . '/.tq-baseline.json';
+        file_put_contents($baselinePath, json_encode(['generated' => $generated, 'issues' => $issues]));
+
+        return $baselinePath;
+    }
+
+    private function writeTestWithNoAssertions(string $className, string $testName): void
+    {
+        file_put_contents(
+            $this->tempDir . "/{$className}.php",
+            sprintf(self::NO_ASSERTIONS_TEST, $className, $testName)
+        );
+    }
+
+    public function testGenerateBaselineRequiresReason(): void
+    {
+        [$returnCode, $output] = $this->runTq('--generate-baseline --baseline=.tq-baseline.json');
+
         self::assertSame(1, $returnCode, 'Expected non-zero exit code');
-        self::assertStringContainsString('--reason is required', implode("\n", $output));
+        self::assertStringContainsString('--reason is required', $output, 'Should explain that --reason is required');
     }
 
     public function testAddToBaselineRequiresReason(): void
     {
-        $output = [];
-        $returnCode = 0;
-
-        exec(
-            sprintf('php %s %s --add-to-baseline 2>&1', escapeshellarg($this->analyzeScript), escapeshellarg($this->tempDir)),
-            $output,
-            $returnCode
-        );
+        [$returnCode, $output] = $this->runTq('--add-to-baseline');
 
         self::assertSame(1, $returnCode, 'Expected non-zero exit code');
-        self::assertStringContainsString('--reason is required', implode("\n", $output));
+        self::assertStringContainsString('--reason is required', $output, 'Should explain that --reason is required');
     }
 
     public function testGenerateBaselineRefusesIfFileExists(): void
     {
-        // Create existing baseline file
-        $baselinePath = $this->tempDir . '/.tq-baseline.json';
-        file_put_contents($baselinePath, json_encode(['generated' => date('c'), 'issues' => []]));
+        $this->writeBaseline([], date('c'));
 
-        $output = [];
-        $returnCode = 0;
-
-        exec(
-            sprintf(
-                'php %s %s --generate-baseline --baseline=.tq-baseline.json --reason="Test reason" 2>&1',
-                escapeshellarg($this->analyzeScript),
-                escapeshellarg($this->tempDir)
-            ),
-            $output,
-            $returnCode
+        [$returnCode, $output] = $this->runTq(
+            '--generate-baseline --baseline=.tq-baseline.json --reason="Test reason"'
         );
 
         self::assertSame(1, $returnCode, 'Expected non-zero exit code');
-        $outputStr = implode("\n", $output);
-        self::assertStringContainsString('already exists', $outputStr);
-        self::assertStringContainsString('--add-to-baseline', $outputStr);
-        self::assertStringContainsString('--force', $outputStr);
+        self::assertStringContainsString('already exists', $output, 'Should say the baseline already exists');
+        self::assertStringContainsString('--add-to-baseline', $output, 'Should suggest --add-to-baseline');
+        self::assertStringContainsString('--force', $output, 'Should suggest --force');
     }
 
     public function testGenerateBaselineWithForceOverwritesExisting(): void
     {
-        // Create existing baseline file with old content
-        $baselinePath = $this->tempDir . '/.tq-baseline.json';
-        file_put_contents($baselinePath, json_encode([
-            'generated' => '2020-01-01T00:00:00+00:00',
-            'issues' => [['file' => 'old.php', 'test' => 'testOld', 'type' => 'no_assertions', 'reason' => 'old']],
-        ]));
+        $baselinePath = $this->writeBaseline([
+            ['file' => 'old.php', 'test' => 'testOld', 'type' => 'no_assertions', 'reason' => 'old'],
+        ]);
 
-        $output = [];
-        $returnCode = 0;
-
-        exec(
-            sprintf(
-                'php %s %s --generate-baseline --baseline=.tq-baseline.json --force --reason="New reason" 2>&1',
-                escapeshellarg($this->analyzeScript),
-                escapeshellarg($this->tempDir)
-            ),
-            $output,
-            $returnCode
+        [$returnCode] = $this->runTq(
+            '--generate-baseline --baseline=.tq-baseline.json --force --reason="New reason"'
         );
 
         // Should succeed (exit 0) because no issues found in empty directory
         self::assertSame(0, $returnCode, 'Expected zero exit code');
 
-        // Verify file was overwritten (won't have old entry)
         $newContent = json_decode(file_get_contents($baselinePath), true);
-        self::assertArrayHasKey('generated', $newContent);
-        // Old entry should be gone
-        self::assertNotContains('old.php', array_column($newContent['issues'] ?? [], 'file'));
+        self::assertArrayHasKey('generated', $newContent, 'Overwritten baseline should have a generated timestamp');
+        self::assertNotContains(
+            'old.php',
+            array_column($newContent['issues'] ?? [], 'file'),
+            'Old baseline entries should be gone after --force'
+        );
     }
 
     public function testGeneratedBaselineEntriesHaveTimestamps(): void
     {
-        // Create a simple test file with a smell
-        $testFilePath = $this->tempDir . '/ExampleTest.php';
-        file_put_contents($testFilePath, <<<'PHP'
-<?php
-use PHPUnit\Framework\TestCase;
-class ExampleTest extends TestCase {
-    public function testEmpty(): void {
-        // Test with no assertions
-    }
-}
-PHP
-        );
-
-        $output = [];
-        $returnCode = 0;
+        $this->writeTestWithNoAssertions('ExampleTest', 'testEmpty');
 
         // Generate baseline to stdout (not to file)
-        exec(
-            sprintf(
-                'php %s %s --generate-baseline --reason="Test timestamps" 2>&1',
-                escapeshellarg($this->analyzeScript),
-                escapeshellarg($this->tempDir)
-            ),
-            $output,
-            $returnCode
-        );
-
-        $outputStr = implode("\n", $output);
-        $decoded = json_decode($outputStr, true);
+        [, $output] = $this->runTq('--generate-baseline --reason="Test timestamps"');
+        $decoded = json_decode($output, true);
 
         self::assertNotNull($decoded, 'Expected valid JSON output');
-        self::assertArrayHasKey('issues', $decoded);
+        self::assertArrayHasKey('issues', $decoded, 'Baseline JSON should have an issues key');
         self::assertNotEmpty($decoded['issues'], 'Expected at least one issue');
 
         foreach ($decoded['issues'] as $issue) {
@@ -173,56 +166,21 @@ PHP
 
     public function testAddToBaselineAddsTimestamps(): void
     {
-        // Create existing baseline without timestamps (simulating legacy baseline)
-        $baselinePath = $this->tempDir . '/.tq-baseline.json';
-        file_put_contents($baselinePath, json_encode([
-            'generated' => '2020-01-01T00:00:00+00:00',
-            'issues' => [
-                ['file' => 'OldTest.php', 'test' => 'testOld', 'type' => 'no_assertions', 'reason' => 'Legacy'],
-            ],
-        ]));
+        // Existing baseline without timestamps (simulating legacy baseline)
+        $baselinePath = $this->writeBaseline([
+            ['file' => 'OldTest.php', 'test' => 'testOld', 'type' => 'no_assertions', 'reason' => 'Legacy'],
+        ]);
+        $this->writeTestWithNoAssertions('NewTest', 'testNew');
 
-        // Create a new test file with a smell
-        $testFilePath = $this->tempDir . '/NewTest.php';
-        file_put_contents($testFilePath, <<<'PHP'
-<?php
-use PHPUnit\Framework\TestCase;
-class NewTest extends TestCase {
-    public function testNew(): void {
-        // Test with no assertions
-    }
-}
-PHP
-        );
-
-        $output = [];
-        $returnCode = 0;
-
-        exec(
-            sprintf(
-                'php %s %s --add-to-baseline --reason="Newly added" 2>&1',
-                escapeshellarg($this->analyzeScript),
-                escapeshellarg($this->tempDir)
-            ),
-            $output,
-            $returnCode
-        );
+        [$returnCode] = $this->runTq('--add-to-baseline --reason="Newly added"');
 
         self::assertSame(0, $returnCode, 'Expected zero exit code');
 
         $newContent = json_decode(file_get_contents($baselinePath), true);
+        $entriesByFile = array_column($newContent['issues'], null, 'file');
 
-        // Find the new entry
-        $newEntry = null;
-        foreach ($newContent['issues'] as $issue) {
-            if ($issue['file'] === 'NewTest.php') {
-                $newEntry = $issue;
-                break;
-            }
-        }
-
-        self::assertNotNull($newEntry, 'New entry should be in baseline');
-        self::assertArrayHasKey('added_at', $newEntry, 'New entry should have added_at timestamp');
-        self::assertSame('Newly added', $newEntry['reason']);
+        self::assertArrayHasKey('NewTest.php', $entriesByFile, 'New entry should be in baseline');
+        self::assertArrayHasKey('added_at', $entriesByFile['NewTest.php'], 'New entry should have added_at timestamp');
+        self::assertSame('Newly added', $entriesByFile['NewTest.php']['reason'], 'New entry should carry the given reason');
     }
 }

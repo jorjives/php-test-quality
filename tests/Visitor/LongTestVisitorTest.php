@@ -11,12 +11,14 @@ use TestQualityAnalyzer\Visitor\LongTestVisitor;
 
 final class LongTestVisitorTest extends TestCase
 {
-    private function analyzeCode(string $code): LongTestVisitor
+    private const DEFAULT_THRESHOLD = 40;
+
+    private function analyzeCode(string $code, int $lineThreshold = self::DEFAULT_THRESHOLD): LongTestVisitor
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
         $ast = $parser->parse($code);
 
-        $visitor = new LongTestVisitor();
+        $visitor = new LongTestVisitor($lineThreshold);
         $traverser = new NodeTraverser();
         $traverser->addVisitor($visitor);
         $traverser->traverse($ast);
@@ -24,65 +26,40 @@ final class LongTestVisitorTest extends TestCase
         return $visitor;
     }
 
+    /**
+     * Build a method spanning exactly $lines lines, from its signature to its closing brace.
+     */
+    private function method(string $name, int $lines, string $visibility = 'public'): string
+    {
+        // Signature, opening brace, final statement and closing brace account for 4 lines
+        $body = '';
+        for ($i = 1; $i <= $lines - 4; $i++) {
+            $body .= "        \$v{$i} = {$i};\n";
+        }
+
+        return "    {$visibility} function {$name}(): void\n"
+            . "    {\n"
+            . $body
+            . "        self::assertTrue(true);\n"
+            . "    }\n";
+    }
+
+    private function classWith(string ...$methods): string
+    {
+        return "<?php\nclass SomeTest extends TestCase {\n" . implode("\n", $methods) . "}\n";
+    }
+
     public function testDetectsLongTestMethod(): void
     {
-        // 42 lines total (start to end), exceeds 40 line threshold
-        $code = <<<'PHP'
-<?php
-class SomeTest extends TestCase {
-    public function testVeryLongMethod(): void
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        $p = 16;
-        $q = 17;
-        $r = 18;
-        $s = 19;
-        $t = 20;
-        $u = 21;
-        $v = 22;
-        $w = 23;
-        $x = 24;
-        $y = 25;
-        $z = 26;
-        $aa = 27;
-        $bb = 28;
-        $cc = 29;
-        $dd = 30;
-        $ee = 31;
-        $ff = 32;
-        $gg = 33;
-        $hh = 34;
-        $ii = 35;
-        $jj = 36;
-        $kk = 37;
-        $ll = 38;
-        self::assertTrue(true);
-    }
-}
-PHP;
+        $code = $this->classWith($this->method('testVeryLongMethod', self::DEFAULT_THRESHOLD + 2));
 
-        $visitor = $this->analyzeCode($code);
-        $issues = $visitor->getIssues();
+        $issues = $this->analyzeCode($code)->getIssues();
 
         self::assertCount(1, $issues, 'Should detect one long test');
-        self::assertSame('testVeryLongMethod', $issues[0]->testName);
-        self::assertSame('long_test', $issues[0]->type);
-        self::assertStringContainsString('42 lines', $issues[0]->message);
-        self::assertStringContainsString('40', $issues[0]->message);
+        self::assertSame('testVeryLongMethod', $issues[0]->testName, 'Issue should name the long test');
+        self::assertSame('long_test', $issues[0]->type, 'Issue should have the long_test type');
+        self::assertStringContainsString('42 lines', $issues[0]->message, 'Message should report the line count');
+        self::assertStringContainsString('threshold: 40', $issues[0]->message, 'Message should report the threshold');
     }
 
     public function testIgnoresShortTestMethod(): void
@@ -105,48 +82,10 @@ PHP;
 
     public function testIgnoresLongNonTestMethod(): void
     {
-        $code = <<<'PHP'
-<?php
-class SomeTest extends TestCase {
-    private function helperMethod(): array
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        $p = 16;
-        $q = 17;
-        $r = 18;
-        $s = 19;
-        $t = 20;
-        $u = 21;
-        $v = 22;
-        $w = 23;
-        $x = 24;
-        $y = 25;
-        $z = 26;
-        $aa = 27;
-        $bb = 28;
-        return [$a, $b];
-    }
-
-    public function testShort(): void
-    {
-        self::assertTrue(true);
-    }
-}
-PHP;
+        $code = $this->classWith(
+            $this->method('helperMethod', self::DEFAULT_THRESHOLD + 2, 'private'),
+            $this->method('testShort', 4),
+        );
 
         $visitor = $this->analyzeCode($code);
 
@@ -155,173 +94,44 @@ PHP;
 
     public function testDetectsLongMethodWithTestAttribute(): void
     {
-        // Method named without 'test' prefix but with #[Test] attribute, exceeds 40 line threshold
-        $code = <<<'PHP'
-<?php
-use PHPUnit\Framework\Attributes\Test;
+        // Method named without 'test' prefix but with #[Test] attribute
+        $code = "<?php\nuse PHPUnit\\Framework\\Attributes\\Test;\n\n"
+            . "class SomeTest extends TestCase {\n"
+            . "    #[Test]\n"
+            . $this->method('veryLongMethodWithAttribute', self::DEFAULT_THRESHOLD + 2)
+            . "}\n";
 
-class SomeTest extends TestCase {
-    #[Test]
-    public function veryLongMethodWithAttribute(): void
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        $p = 16;
-        $q = 17;
-        $r = 18;
-        $s = 19;
-        $t = 20;
-        $u = 21;
-        $v = 22;
-        $w = 23;
-        $x = 24;
-        $y = 25;
-        $z = 26;
-        $aa = 27;
-        $bb = 28;
-        $cc = 29;
-        $dd = 30;
-        $ee = 31;
-        $ff = 32;
-        $gg = 33;
-        $hh = 34;
-        $ii = 35;
-        $jj = 36;
-        $kk = 37;
-        $ll = 38;
-        self::assertTrue(true);
-    }
-}
-PHP;
-
-        $visitor = $this->analyzeCode($code);
-        $issues = $visitor->getIssues();
+        $issues = $this->analyzeCode($code)->getIssues();
 
         self::assertCount(1, $issues, 'Should detect long test with #[Test] attribute');
-        self::assertSame('veryLongMethodWithAttribute', $issues[0]->testName);
-        self::assertSame('long_test', $issues[0]->type);
+        self::assertSame('veryLongMethodWithAttribute', $issues[0]->testName, 'Issue should name the attributed test');
+        self::assertSame('long_test', $issues[0]->type, 'Issue should have the long_test type');
     }
 
     public function testIgnoresMethodExactlyAtThreshold(): void
     {
-        // Method that is exactly 40 lines (should NOT flag)
-        $code = <<<'PHP'
-<?php
-class SomeTest extends TestCase {
-    public function testExactlyFortyLines(): void
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        $p = 16;
-        $q = 17;
-        $r = 18;
-        $s = 19;
-        $t = 20;
-        $u = 21;
-        $v = 22;
-        $w = 23;
-        $x = 24;
-        $y = 25;
-        $z = 26;
-        $aa = 27;
-        $bb = 28;
-        $cc = 29;
-        $dd = 30;
-        $ee = 31;
-        $ff = 32;
-        $gg = 33;
-        $hh = 34;
-        $ii = 35;
-        $jj = 36;
-        self::assertTrue(true);
-    }
-}
-PHP;
+        $code = $this->classWith($this->method('testExactlyAtThreshold', self::DEFAULT_THRESHOLD));
 
         $visitor = $this->analyzeCode($code);
 
         self::assertCount(0, $visitor->getIssues(), 'Should not flag methods exactly at threshold');
     }
 
-    public function testResetClearsIssues(): void
+    public function testFlagsMethodOneLineOverThreshold(): void
     {
-        // 42 lines - exceeds 40 line threshold
-        $code = <<<'PHP'
-<?php
-class SomeTest extends TestCase {
-    public function testVeryLongMethod(): void
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        $p = 16;
-        $q = 17;
-        $r = 18;
-        $s = 19;
-        $t = 20;
-        $u = 21;
-        $v = 22;
-        $w = 23;
-        $x = 24;
-        $y = 25;
-        $z = 26;
-        $aa = 27;
-        $bb = 28;
-        $cc = 29;
-        $dd = 30;
-        $ee = 31;
-        $ff = 32;
-        $gg = 33;
-        $hh = 34;
-        $ii = 35;
-        $jj = 36;
-        $kk = 37;
-        $ll = 38;
-        self::assertTrue(true);
-    }
-}
-PHP;
+        $code = $this->classWith($this->method('testOneOverThreshold', self::DEFAULT_THRESHOLD + 1));
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+
+        self::assertCount(1, $visitor->getIssues(), 'Should flag methods one line over the threshold');
+    }
+
+    public function testResetClearsIssues(): void
+    {
+        $code = $this->classWith($this->method('testVeryLongMethod', self::DEFAULT_THRESHOLD + 2));
+
+        $visitor = $this->analyzeCode($code);
+        self::assertCount(1, $visitor->getIssues(), 'Precondition: the long test should be flagged');
 
         $visitor->reset();
         self::assertCount(0, $visitor->getIssues(), 'reset() should clear all issues');
@@ -343,143 +153,26 @@ PHP;
 
     public function testCustomThresholdDetectsShorterTests(): void
     {
-        $code = <<<'PHP'
-<?php
-class SomeTest extends TestCase {
-    public function testMediumLength(): void
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        self::assertTrue(true);
-    }
-}
-PHP;
+        $customThreshold = 15;
+        $code = $this->classWith($this->method('testMediumLength', $customThreshold + 4));
 
-        $parser = (new \PhpParser\ParserFactory())->createForNewestSupportedVersion();
-        $ast = $parser->parse($code);
+        $issues = $this->analyzeCode($code, $customThreshold)->getIssues();
 
-        $visitor = new LongTestVisitor(lineThreshold: 15);
-        $traverser = new \PhpParser\NodeTraverser();
-        $traverser->addVisitor($visitor);
-        $traverser->traverse($ast);
-
-        $issues = $visitor->getIssues();
         self::assertCount(1, $issues, 'Custom threshold of 15 should flag this test');
-        self::assertStringContainsString('15', $issues[0]->message, 'Message should show configured threshold');
+        self::assertStringContainsString('threshold: 15', $issues[0]->message, 'Message should show configured threshold');
     }
 
     public function testDetectsMultipleLongTests(): void
     {
-        // Both methods exceed 40 line threshold
-        $code = <<<'PHP'
-<?php
-class SomeTest extends TestCase {
-    public function testFirstLongMethod(): void
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        $p = 16;
-        $q = 17;
-        $r = 18;
-        $s = 19;
-        $t = 20;
-        $u = 21;
-        $v = 22;
-        $w = 23;
-        $x = 24;
-        $y = 25;
-        $z = 26;
-        $aa = 27;
-        $bb = 28;
-        $cc = 29;
-        $dd = 30;
-        $ee = 31;
-        $ff = 32;
-        $gg = 33;
-        $hh = 34;
-        $ii = 35;
-        $jj = 36;
-        $kk = 37;
-        $ll = 38;
-        self::assertTrue(true);
-    }
+        $code = $this->classWith(
+            $this->method('testFirstLongMethod', self::DEFAULT_THRESHOLD + 2),
+            $this->method('testSecondLongMethod', self::DEFAULT_THRESHOLD + 2),
+        );
 
-    public function testSecondLongMethod(): void
-    {
-        $a = 1;
-        $b = 2;
-        $c = 3;
-        $d = 4;
-        $e = 5;
-        $f = 6;
-        $g = 7;
-        $h = 8;
-        $i = 9;
-        $j = 10;
-        $k = 11;
-        $l = 12;
-        $m = 13;
-        $n = 14;
-        $o = 15;
-        $p = 16;
-        $q = 17;
-        $r = 18;
-        $s = 19;
-        $t = 20;
-        $u = 21;
-        $v = 22;
-        $w = 23;
-        $x = 24;
-        $y = 25;
-        $z = 26;
-        $aa = 27;
-        $bb = 28;
-        $cc = 29;
-        $dd = 30;
-        $ee = 31;
-        $ff = 32;
-        $gg = 33;
-        $hh = 34;
-        $ii = 35;
-        $jj = 36;
-        $kk = 37;
-        $ll = 38;
-        self::assertTrue(true);
-    }
-}
-PHP;
-
-        $visitor = $this->analyzeCode($code);
-        $issues = $visitor->getIssues();
+        $issues = $this->analyzeCode($code)->getIssues();
 
         self::assertCount(2, $issues, 'Should detect multiple long tests');
-        self::assertSame('testFirstLongMethod', $issues[0]->testName);
-        self::assertSame('testSecondLongMethod', $issues[1]->testName);
+        self::assertSame('testFirstLongMethod', $issues[0]->testName, 'First issue should name the first long test');
+        self::assertSame('testSecondLongMethod', $issues[1]->testName, 'Second issue should name the second long test');
     }
 }
