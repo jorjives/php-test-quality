@@ -39,9 +39,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the var_dump() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsPrintRCall(): void
@@ -59,9 +59,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the print_r() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsVarExportCall(): void
@@ -79,9 +79,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the var_export() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsErrorLogCall(): void
@@ -99,9 +99,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the error_log() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsEchoStatement(): void
@@ -119,9 +119,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the echo statement');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsPrintStatement(): void
@@ -139,9 +139,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the print statement');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsDumpCall(): void
@@ -159,9 +159,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the dump() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsDdCall(): void
@@ -179,9 +179,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the dd() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testIgnoresPrintOutsideTestMethod(): void
@@ -223,13 +223,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(3, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('redundant_print', $issues[1]->type);
-        self::assertSame('testSomething', $issues[2]->testName);
-        self::assertSame('redundant_print', $issues[2]->type);
+        self::assertCount(3, $issues, 'Should flag each of the three print statements');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'First issue type should be redundant_print');
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the offending test');
+        self::assertSame('redundant_print', $issues[1]->type, 'Second issue type should be redundant_print');
+        self::assertSame('testSomething', $issues[2]->testName, 'Third issue should name the offending test');
+        self::assertSame('redundant_print', $issues[2]->type, 'Third issue type should be redundant_print');
     }
 
     public function testResetClearsIssues(): void
@@ -245,10 +245,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the var_dump() call before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'Reset should clear all issues');
     }
 
     public function testGetTypeReturnsRedundantPrint(): void
@@ -276,9 +276,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itDoesSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the echo in the attributed test');
+        self::assertSame('itDoesSomething', $issues[0]->testName, 'Issue should name the attributed test');
+        self::assertSame('redundant_print', $issues[0]->type, 'Issue type should be redundant_print');
     }
 
     public function testDetectsCaseInsensitiveFunctionNames(): void
@@ -298,13 +298,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(3, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('redundant_print', $issues[0]->type);
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('redundant_print', $issues[1]->type);
-        self::assertSame('testSomething', $issues[2]->testName);
-        self::assertSame('redundant_print', $issues[2]->type);
+        self::assertCount(3, $issues, 'Should flag upper and mixed-case print calls');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the offending test');
+        self::assertSame('redundant_print', $issues[0]->type, 'First issue type should be redundant_print');
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the offending test');
+        self::assertSame('redundant_print', $issues[1]->type, 'Second issue type should be redundant_print');
+        self::assertSame('testSomething', $issues[2]->testName, 'Third issue should name the offending test');
+        self::assertSame('redundant_print', $issues[2]->type, 'Third issue type should be redundant_print');
     }
 
     public function testGetNameReturnsRedundantPrint(): void

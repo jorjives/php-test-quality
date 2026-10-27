@@ -41,10 +41,14 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testImport', $issues[0]->testName);
-        self::assertSame('mystery_guest', $issues[0]->type);
-        self::assertStringContainsString('file_get_contents', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the file_get_contents() call');
+        self::assertSame('testImport', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('mystery_guest', $issues[0]->type, 'Issue type should be mystery_guest');
+        self::assertStringContainsString(
+            'file_get_contents',
+            $issues[0]->message,
+            'Message should mention file_get_contents'
+        );
     }
 
     public function testDetectsFopen(): void
@@ -65,9 +69,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testReadFile', $issues[0]->testName);
-        self::assertSame('mystery_guest', $issues[0]->type);
+        self::assertCount(2, $issues, 'Should flag two file-access calls');
+        self::assertSame('testReadFile', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('mystery_guest', $issues[0]->type, 'Issue type should be mystery_guest');
     }
 
     public function testDetectsFgets(): void
@@ -88,8 +92,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertStringContainsString('fgets', $issues[1]->message);
+        self::assertCount(2, $issues, 'Should flag two file-access calls');
+        self::assertStringContainsString('fgets', $issues[1]->message, 'Second issue should mention fgets');
     }
 
     public function testDetectsFileFunction(): void
@@ -108,9 +112,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testReadLines', $issues[0]->testName);
-        self::assertStringContainsString('file()', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the file() call');
+        self::assertSame('testReadLines', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertStringContainsString('file()', $issues[0]->message, 'Message should mention file()');
     }
 
     public function testDetectsReadfile(): void
@@ -131,8 +135,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('readfile', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the readfile() call');
+        self::assertStringContainsString('readfile', $issues[0]->message, 'Message should mention readfile');
     }
 
     public function testDetectsParseIniFile(): void
@@ -151,8 +155,12 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('parse_ini_file', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the parse_ini_file() call');
+        self::assertStringContainsString(
+            'parse_ini_file',
+            $issues[0]->message,
+            'Message should mention parse_ini_file'
+        );
     }
 
     public function testDetectsSimplexmlLoadFile(): void
@@ -171,8 +179,12 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('simplexml_load_file', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the simplexml_load_file() call');
+        self::assertStringContainsString(
+            'simplexml_load_file',
+            $issues[0]->message,
+            'Message should mention simplexml_load_file'
+        );
     }
 
     public function testDetectsIncludeStatement(): void
@@ -191,8 +203,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('include', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the include statement');
+        self::assertStringContainsString('include', $issues[0]->message, 'Message should mention include');
     }
 
     public function testDetectsRequireStatement(): void
@@ -212,8 +224,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('require', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the require statement');
+        self::assertStringContainsString('require', $issues[0]->message, 'Message should mention require');
     }
 
     public function testDetectsIncludeOnceStatement(): void
@@ -232,8 +244,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('include_once', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the include_once statement');
+        self::assertStringContainsString('include_once', $issues[0]->message, 'Message should mention include_once');
     }
 
     public function testDetectsRequireOnceStatement(): void
@@ -252,8 +264,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('require_once', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the require_once statement');
+        self::assertStringContainsString('require_once', $issues[0]->message, 'Message should mention require_once');
     }
 
     public function testDetectsDatabaseQuery(): void
@@ -273,8 +285,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('mystery_guest', $issues[0]->type);
+        self::assertCount(2, $issues, 'Should flag two database calls');
+        self::assertSame('mystery_guest', $issues[0]->type, 'Issue type should be mystery_guest');
     }
 
     public function testDetectsDoctrineFind(): void
@@ -293,8 +305,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('find()', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the repository find() call');
+        self::assertStringContainsString('find()', $issues[0]->message, 'Message should mention find()');
     }
 
     public function testDetectsFindBy(): void
@@ -313,8 +325,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('findBy()', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the repository findBy() call');
+        self::assertStringContainsString('findBy()', $issues[0]->message, 'Message should mention findBy()');
     }
 
     public function testDetectsFindOneBy(): void
@@ -333,8 +345,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('findOneBy()', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the repository findOneBy() call');
+        self::assertStringContainsString('findOneBy()', $issues[0]->message, 'Message should mention findOneBy()');
     }
 
     public function testDetectsCreateQueryBuilder(): void
@@ -354,8 +366,12 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('createQueryBuilder()', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the createQueryBuilder() call');
+        self::assertStringContainsString(
+            'createQueryBuilder()',
+            $issues[0]->message,
+            'Message should mention createQueryBuilder()'
+        );
     }
 
     public function testDetectsFetchAll(): void
@@ -504,10 +520,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the file read before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'Reset should clear all issues');
     }
 
     public function testGetTypeReturnsMysteryGuest(): void
@@ -543,8 +559,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('readsFromFile', $issues[0]->testName);
+        self::assertCount(1, $issues, 'Should flag the file read in the attributed test');
+        self::assertSame('readsFromFile', $issues[0]->testName, 'Issue should name the attributed test');
     }
 
     public function testDetectsFindAll(): void
@@ -563,8 +579,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('findAll()', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the repository findAll() call');
+        self::assertStringContainsString('findAll()', $issues[0]->message, 'Message should mention findAll()');
     }
 
     public function testSetCurrentFile(): void
@@ -591,7 +607,11 @@ PHP;
         $traverser->traverse($ast);
 
         $issues = $visitor->getIssues();
-        self::assertCount(1, $issues);
-        self::assertSame('/path/to/SomeTest.php', $issues[0]->file);
+        self::assertCount(1, $issues, 'Should flag the file read');
+        self::assertSame(
+            '/path/to/SomeTest.php',
+            $issues[0]->file,
+            'Issue should carry the file set via setCurrentFile()'
+        );
     }
 }

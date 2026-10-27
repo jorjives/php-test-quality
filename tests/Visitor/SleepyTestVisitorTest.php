@@ -39,9 +39,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('sleepy_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the sleep() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('sleepy_test', $issues[0]->type, 'Issue type should be sleepy_test');
     }
 
     public function testDetectsUsleepCall(): void
@@ -59,9 +59,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('sleepy_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the usleep() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('sleepy_test', $issues[0]->type, 'Issue type should be sleepy_test');
     }
 
     public function testDetectsTimeNanosleepCall(): void
@@ -79,9 +79,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('sleepy_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the time_nanosleep() call');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('sleepy_test', $issues[0]->type, 'Issue type should be sleepy_test');
     }
 
     public function testIgnoresSleepOutsideTestMethod(): void
@@ -141,10 +141,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the sleep() call before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'Reset should clear all issues');
     }
 
     public function testGetTypeReturnsSleepyTest(): void
@@ -171,13 +171,13 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(3, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('sleepy_test', $issues[0]->type);
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('sleepy_test', $issues[1]->type);
-        self::assertSame('testSomething', $issues[2]->testName);
-        self::assertSame('sleepy_test', $issues[2]->type);
+        self::assertCount(3, $issues, 'Should flag each of the three sleep calls');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the offending test');
+        self::assertSame('sleepy_test', $issues[0]->type, 'First issue type should be sleepy_test');
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the offending test');
+        self::assertSame('sleepy_test', $issues[1]->type, 'Second issue type should be sleepy_test');
+        self::assertSame('testSomething', $issues[2]->testName, 'Third issue should name the offending test');
+        self::assertSame('sleepy_test', $issues[2]->type, 'Third issue type should be sleepy_test');
     }
 
     public function testGetNameReturnsSleepyTest(): void

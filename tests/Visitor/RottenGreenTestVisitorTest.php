@@ -42,11 +42,11 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
-        self::assertStringContainsString('assertTrue', $issues[0]->message);
-        self::assertStringContainsString('conditional', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the assertion inside the if block');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'Issue type should be rotten_green_test');
+        self::assertStringContainsString('assertTrue', $issues[0]->message, 'Message should name the assertTrue call');
+        self::assertStringContainsString('conditional', $issues[0]->message, 'Message should mention the conditional');
     }
 
     public function testDetectsAssertionInElseBlock(): void
@@ -69,11 +69,15 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
-        self::assertStringContainsString('assertFalse', $issues[0]->message);
-        self::assertStringContainsString('conditional', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the assertion inside the else block');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'Issue type should be rotten_green_test');
+        self::assertStringContainsString(
+            'assertFalse',
+            $issues[0]->message,
+            'Message should name the assertFalse call'
+        );
+        self::assertStringContainsString('conditional', $issues[0]->message, 'Message should mention the conditional');
     }
 
     public function testDetectsAssertionInElseIfBlock(): void
@@ -96,9 +100,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the assertion inside the elseif block');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'Issue type should be rotten_green_test');
     }
 
     public function testDetectsAssertionInSwitchCase(): void
@@ -123,15 +127,15 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
-        self::assertStringContainsString('assertTrue', $issues[0]->message);
-        self::assertStringContainsString('conditional', $issues[0]->message);
+        self::assertCount(2, $issues, 'Should flag the assertion in each switch branch');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'First issue type should be rotten_green_test');
+        self::assertStringContainsString('assertTrue', $issues[0]->message, 'First message should name assertTrue');
+        self::assertStringContainsString('conditional', $issues[0]->message, 'First message should say conditional');
 
-        self::assertSame('testSomething', $issues[1]->testName);
-        self::assertSame('rotten_green_test', $issues[1]->type);
-        self::assertStringContainsString('assertFalse', $issues[1]->message);
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[1]->type, 'Second issue type should be rotten_green_test');
+        self::assertStringContainsString('assertFalse', $issues[1]->message, 'Second message should name assertFalse');
     }
 
     public function testDetectsAssertionAfterReturn(): void
@@ -153,11 +157,19 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
-        self::assertStringContainsString('assertNotNull', $issues[0]->message);
-        self::assertStringContainsString('unreachable', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the assertion after the early return');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'Issue type should be rotten_green_test');
+        self::assertStringContainsString(
+            'assertNotNull',
+            $issues[0]->message,
+            'Message should name the assertNotNull call'
+        );
+        self::assertStringContainsString(
+            'unreachable',
+            $issues[0]->message,
+            'Message should say the assertion is unreachable'
+        );
     }
 
     public function testDetectsAssertionAfterThrow(): void
@@ -180,11 +192,15 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
-        self::assertStringContainsString('assertTrue', $issues[0]->message);
-        self::assertStringContainsString('unreachable', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the assertion after the rethrow');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'Issue type should be rotten_green_test');
+        self::assertStringContainsString('assertTrue', $issues[0]->message, 'Message should name the assertTrue call');
+        self::assertStringContainsString(
+            'unreachable',
+            $issues[0]->message,
+            'Message should say the assertion is unreachable'
+        );
     }
 
     public function testDoesNotFlagNormalAssertion(): void
@@ -250,10 +266,10 @@ class SomeTest extends TestCase {
 PHP;
 
         $visitor = $this->analyzeCode($code);
-        self::assertCount(1, $visitor->getIssues());
+        self::assertCount(1, $visitor->getIssues(), 'Should flag the conditional assertion before reset');
 
         $visitor->reset();
-        self::assertCount(0, $visitor->getIssues());
+        self::assertCount(0, $visitor->getIssues(), 'Reset should clear all issues');
     }
 
     public function testGetTypeReturnsRottenGreenTest(): void
@@ -291,9 +307,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('itDoesSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
+        self::assertCount(1, $issues, 'Should flag the conditional assertion in the attributed test');
+        self::assertSame('itDoesSomething', $issues[0]->testName, 'Issue should name the attributed test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'Issue type should be rotten_green_test');
     }
 
     public function testDetectsMultipleAssertionsInConditionals(): void
@@ -315,9 +331,9 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(2, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('testSomething', $issues[1]->testName);
+        self::assertCount(2, $issues, 'Should flag both assertions inside the if block');
+        self::assertSame('testSomething', $issues[0]->testName, 'First issue should name the offending test');
+        self::assertSame('testSomething', $issues[1]->testName, 'Second issue should name the offending test');
     }
 
     public function testDetectsNestedConditionals(): void
@@ -340,8 +356,8 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
+        self::assertCount(1, $issues, 'Should flag the assertion inside the nested if');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
     }
 
     public function testDetectsStaticCallAssertions(): void
@@ -362,10 +378,10 @@ PHP;
         $visitor = $this->analyzeCode($code);
         $issues = $visitor->getIssues();
 
-        self::assertCount(1, $issues);
-        self::assertSame('testSomething', $issues[0]->testName);
-        self::assertSame('rotten_green_test', $issues[0]->type);
-        self::assertStringContainsString('assertTrue', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag the static assertion inside the if block');
+        self::assertSame('testSomething', $issues[0]->testName, 'Issue should name the offending test');
+        self::assertSame('rotten_green_test', $issues[0]->type, 'Issue type should be rotten_green_test');
+        self::assertStringContainsString('assertTrue', $issues[0]->message, 'Message should name the assertTrue call');
     }
 
     public function testDetectsAssertionInTernaryExpression(): void
@@ -409,8 +425,12 @@ PHP;
         $issues = $visitor->getIssues();
 
         // Only the assertion inside the if should be flagged
-        self::assertCount(1, $issues);
-        self::assertStringContainsString('assertTrue', $issues[0]->message);
+        self::assertCount(1, $issues, 'Should flag only the assertion inside the if block');
+        self::assertStringContainsString(
+            'assertTrue',
+            $issues[0]->message,
+            'Flagged issue should be the assertTrue call'
+        );
     }
 
     public function testIgnoresConditionalOutsideTestMethod(): void
